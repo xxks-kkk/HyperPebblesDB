@@ -194,7 +194,7 @@ check_PROGRAMS += version_set_test
 check_PROGRAMS += write_batch_test
 check_PROGRAMS += issue178_test
 check_PROGRAMS += issue200_test
-check_PROGRAMS += testLevelDB
+check_PROGRAMS += testPebblesDB
 
 TESTS = $(check_PROGRAMS)
 
@@ -283,5 +283,5 @@ issue178_test_LDADD = libpebblesdb.la -lpthread
 issue200_test_SOURCES = issues/issue200_test.cc $(TESTHARNESS)
 issue200_test_LDADD = libpebblesdb.la -lpthread
 
-testLevelDB_SOURCES = custom_test/testPebblesDB.cpp
-testLevelDB_LDADD = libpebblesdb.la -lpthread
+testPebblesDB_SOURCES = learning/testPebblesDB.cc
+testPebblesDB_LDADD = libpebblesdb.la -lpthread
