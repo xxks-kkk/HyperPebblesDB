@@ -46,6 +46,10 @@ int main(){
   else
     std::cout<<key<<"="<<value<<std::endl;
 
+  std::string property;
+  db->GetProperty("leveldb.stats", &property);
+  std::cout << property <<std::endl;
+
   delete db;
   return 0;
 }
