@@ -71,3 +71,4 @@
 .idea/
 cmake-build-debug/
 testPebblesDB
+gdb.txt
