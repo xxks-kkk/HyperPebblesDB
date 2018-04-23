@@ -6,9 +6,7 @@ This is a fork of [PebblesDB](https://github.com/utsaslab/pebblesdb), a write-op
 aims at achieving higher write throughput and lower write amplification without compromising on read throughput.
 
 HyperPebblesDB is part of [LevelDB](https://github.com/google/leveldb) family, and thus it is API-compatible with LevelDB and 
-[HyperLevelDB](https://github.com/rescrv/HyperLevelDB). Please read [full paper on PebblesDB]
-(http://www.cs.utexas.edu/~vijay/papers/sosp17-pebblesdb.pdf) and corresponding [slides]
-(http://www.cs.utexas.edu/~vijay/papers/pebblesdb-sosp17-slides.pdf) for further details.
+[HyperLevelDB](https://github.com/rescrv/HyperLevelDB). Please read [full paper on PebblesDB](http://www.cs.utexas.edu/~vijay/papers/sosp17-pebblesdb.pdf) and corresponding [slides](http://www.cs.utexas.edu/~vijay/papers/pebblesdb-sosp17-slides.pdf) for further details.
 
 ### Features not in PebblesDB
 
