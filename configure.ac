@@ -114,4 +114,8 @@ AC_SUBST(SNAPPY_FLAGS)
 AC_SUBST(SNAPPY_LIBS)
 
 AC_CONFIG_FILES([Makefile libpebblesdb.pc])
+
+# Disable Debug by define NDEBUG preprocessor
+# Use it when you run db_bench
+AC_DEFINE([NDEBUG], [1], ['Disable debug'])
 AC_OUTPUT
