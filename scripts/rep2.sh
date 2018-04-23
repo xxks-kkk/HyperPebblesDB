@@ -1,11 +1,14 @@
 #!/bin/sh -vx
 
 # Try to replicate the experiement "Impact of Empty Guards" in PebblesDB paper
-max_iter=20
-i=0
+max_iter=20             # num of iterations to run
+i=0         
+num=100000000           # num rows to insert
+value_size=512          # row size (byte)
+reads=$(( $num / 2 ))   # num reads
+db_bench=../db_bench    # path to db_bench executable
 
-WORKLOADS=${1:-0}
-
+WORKLOADS=${1:-0}       # which workload to run
 case $WORKLOADS in
     0)
         benchmarks_args=fillseq,readrandom,seekrandom,deleteseq,stats,emptyGuards
@@ -27,18 +30,19 @@ case $WORKLOADS in
 esac
 
 db_path=/var/local/pebblesdbtest-1000
-num=100000000
-value_size=512
-reads=50000000
+if [ ! -d $db_path ]; then
+    echo "db_path not exist"
+    exit
+fi
 
 # We insert 20M key-value pairs (with keys from 0 to 20M, value size: 512B, dataset size: 10 GB), perform 10M read operations on the data, and delete all keys.
-./db_bench --benchmarks=$benchmarks_args --num=$num --value_size=$value_size --reads=$reads --base_key=0 --db=$db_path
+./$db_bench --benchmarks=$benchmarks_args --num=$num --value_size=$value_size --reads=$reads --base_key=0 --db=$db_path
 du -sh $db_path
 
 # We then repeat this, but with keys from 20M to 40M.
 while [ $i -lt $max_iter ]
 do
-    ./db_bench --benchmarks=$benchmarks_args --num=$num --value_size=$value_size --reads=$reads --base_key=$(( ($i+1)*100 )) --db=$db_path --use_existing_db=1
+    ./$db_bench --benchmarks=$benchmarks_args --num=$num --value_size=$value_size --reads=$reads --base_key=$(( ($i+1)*100 )) --db=$db_path --use_existing_db=1
     du -sh $db_path
     i=$(( $i + 1 ))
 done
