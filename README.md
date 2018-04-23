@@ -13,7 +13,7 @@ HyperPebblesDB is part of [LevelDB](https://github.com/google/leveldb) family, a
 ### Features not in PebblesDB
 
 - Continuous code integration using Travis-CI
-- `emptyGuards` option for `db_bench` that gives detailed SSTables distribution under each guard across all levels
+- New `emptyGuards` option in `db_bench` that gives detailed SSTables distribution under each guard across all levels
 - `db_bench` enables "fillseq" even when using existing database
 
 ### Dependencies
