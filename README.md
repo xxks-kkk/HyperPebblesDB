@@ -27,7 +27,7 @@ HyperPebblesDB was built, compiled, and tested with g++-4.7, g++-4.9, and g++-5.
 
 ### Installation
 
-`$ cd pebblesdb/`  
+`$ cd HyperPebblesDB/`  
 `$ autoreconf -i`  
 `$ ./configure`  
 `$ make`  
@@ -36,6 +36,5 @@ HyperPebblesDB was built, compiled, and tested with g++-4.7, g++-4.9, and g++-5.
 
 ### Caveat
 
-- HyperPebblesDB is not fully-compatible with RocksDB. It lacks of features list under (Features Not in LevelDB)
-[https://github.com/facebook/rocksdb/wiki/Features-Not-in-LevelDB].
+- HyperPebblesDB is not fully-compatible with RocksDB. It lacks of features list under [Features Not in LevelDB](https://github.com/facebook/rocksdb/wiki/Features-Not-in-LevelDB).
  
