@@ -124,7 +124,7 @@ class DBImpl : public DB {
 
   // Delete any unneeded files and stale in-memory entries.
   void DeleteObsoleteFiles();
-  
+
   // A background thread to compact the in-memory write buffer to disk.
   // Switches to a new log-file/memtable and writes a new descriptor iff
   // successful.
@@ -256,7 +256,7 @@ class DBImpl : public DB {
   uint64_t straight_reads_;
 
   uint64_t guard_array_[config::kNumLevels];
-  
+
   VersionSet* versions_;
 
   Timer* timer;

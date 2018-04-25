@@ -1047,6 +1047,7 @@ namespace leveldb {
       bool is_manual = (manual_compaction_ != NULL);
       InternalKey manual_end;
       std::vector<GuardMetaData *> complete_guards_used_in_bg_compaction;
+      // is_manual 手动触发，我们暂时不需要去关心
       if (is_manual) {
         // TODO Handle CompactRange method for guards
         ManualCompaction *m = manual_compaction_;
@@ -1434,7 +1435,8 @@ namespace leveldb {
               user_comparator()->Compare(current_ikey.user_key(), guards[current_guard]->guard_key.user_key()) >= 0) {
             unsigned temp = current_guard;
             while (temp < guards.size()
-                   && user_comparator()->Compare(current_ikey.user_key(), guards[temp]->guard_key.user_key()) >= 0) {
+                   &&
+                   user_comparator()->Compare(current_ikey.user_key(), guards[temp]->guard_key.user_key()) >= 0) {
               temp++;
             }
             if (compact->builder->NumEntries() > 0) {
@@ -1656,14 +1658,17 @@ namespace leveldb {
         // First look in the memtable, then in the immutable memtable (if any).
         start_timer(GET_TIME_TO_CHECK_MEM_IMM);
         LookupKey lkey(key, snapshot);
+        // MemTable毫无疑问是第一优先级，在内存中查找
         if (mem->Get(lkey, value, &s)) {
           // Done
+          // Immutable MemTable是第二优先级，也在内存
         } else if (imm != NULL && imm->Get(lkey, value, &s)) {
           // Done
         } else {
           record_timer(GET_TIME_TO_CHECK_MEM_IMM);
 
           start_timer(GET_TIME_TO_CHECK_VERSION);
+          // 都没有命中，那么寻找sstabl
           s = current->Get(options, lkey, value, &stats);
           total_files_read += current->num_files_read;
           record_timer(GET_TIME_TO_CHECK_VERSION);
@@ -2271,8 +2276,8 @@ namespace leveldb {
         char buf[200];
         snprintf(buf, sizeof(buf),
                  "                               Compactions\n"
-                         "Level  Files Size(MB) Time(sec) Read(MB) Write(MB)\n"
-                         "--------------------------------------------------\n"
+                 "Level  Files Size(MB) Time(sec) Read(MB) Write(MB)\n"
+                 "--------------------------------------------------\n"
         );
         value->append(buf);
         for (unsigned level = 0; level < config::kNumLevels; level++) {
@@ -2484,7 +2489,7 @@ namespace leveldb {
 
     Status DB::Open(const Options &options, const std::string &dbname,
                     DB **dbptr) {
-      *dbptr = NULL;
+      *dbptr = nullptr;
       DBImpl *impl = new DBImpl(options, dbname);
       impl->mutex_.Lock();
 

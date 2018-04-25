@@ -144,6 +144,7 @@ namespace leveldb {
             const Slice *smallest_user_key,
             const Slice *largest_user_key);
 
+    // Implement MVCC (Multiversion Concurrecy Control) on SStables
     class Version {
     public:
         // Append to *iters a sequence of iterators that will
@@ -426,12 +427,13 @@ namespace leveldb {
                                 void *arg,
                                 bool (*func)(void *, unsigned, FileMetaData *));
 
-        VersionSet *vset_;            // VersionSet to which this Version belongs
+        VersionSet *vset_;            // VersionSet to which this Version belongs (i.e. VersionSet is a doubly-linked list)
         Version *next_;               // Next version in linked list
         Version *prev_;               // Previous version in linked list
-        int refs_;                    // Number of live refs to this version
+        int refs_;                    // Number of live refs to this version (i.e. if 0, this version will be deleted)
 
-        // List of files per level
+        // List of files per level for all levels (该version下的所有level的所有sstable文件，每个文件由FileMetaData表示)
+        // See ~Version() for example
         std::vector<FileMetaData *> files_[config::kNumLevels];
         // List of guards per level which are persisted to disk and already committed to a MANIFEST
         std::vector<GuardMetaData *> guards_[config::kNumLevels];

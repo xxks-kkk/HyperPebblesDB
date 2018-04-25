@@ -1510,7 +1510,7 @@ namespace leveldb {
         r.append(" :");
         const std::vector<GuardMetaData *> &guards = guards_[level];
         std::vector<size_t> num_files_per_guard;
-        std::vector<size_t> empty_guards_guards(2,0);
+        std::vector<size_t> empty_guards_guards(2, 0);
         for (size_t i = 0; i < guards.size(); i++) {
           GuardMetaData *g = guards[i];
           num_files_per_guard.push_back(g->files.size());
@@ -1525,7 +1525,7 @@ namespace leveldb {
             r.push_back(')');
           }
           r.append("], ");
-          if (g->files.size() == 0){
+          if (g->files.size() == 0) {
             empty_guards_guards[0] += 1;
           }
         }
@@ -1546,18 +1546,18 @@ namespace leveldb {
         r.append("level ");
         AppendNumberTo(&r, level);
         r.append(": ");
-        std::vector<double_t > row;
+        std::vector<double_t> row;
         size_t sum = 0;
         size_t x_square = 0;
         size_t n = num_files_per_guard_per_level[level].size();
-        for(size_t i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
           sum += num_files_per_guard_per_level[level][i];
-          x_square += pow(num_files_per_guard_per_level[level][i],2);
+          x_square += pow(num_files_per_guard_per_level[level][i], 2);
         }
         double_t mean = (double_t) sum / n;
         AppendDoubleTo(&r, mean);
         r.append(", ");
-        double_t variance = (double_t) x_square / n - pow(mean,2);
+        double_t variance = (double_t) x_square / n - pow(mean, 2);
         AppendDoubleTo(&r, variance);
         r.append(", ");
         double_t stddev = sqrt(variance);
@@ -1589,7 +1589,7 @@ namespace leveldb {
       r.append("\n");
 
       r.append("variance on files per guard: ");
-      double_t totalVariance = (double_t) totalX_square / totalN - pow(totalMean,2);
+      double_t totalVariance = (double_t) totalX_square / totalN - pow(totalMean, 2);
       AppendDoubleTo(&r, totalVariance);
       r.append("\n");
 
@@ -2038,6 +2038,7 @@ namespace leveldb {
         void MaybeAddFile(Version *v, unsigned level, FileMetaData *f) {
           if (levels_[level].deleted_files.count(f->number) > 0) {
             // File is deleted: do nothing
+            // 如果文件在删除列表之内，就没必要加入到新的Version v的对应层级的文件集合
           } else {
             std::vector<FileMetaData *> *files = &v->files_[level];
             f->refs++;
@@ -2721,6 +2722,7 @@ namespace leveldb {
       return 0;
     }
 
+    // 这个部分是用来帮忙选择下一次Compaction应该从which level 开始
     void VersionSet::Finalize(Version *v) {
       // Compute the ratio of disk usage to its limit
       for (unsigned level = 0; level < config::kNumLevels; ++level) {
@@ -3278,6 +3280,7 @@ namespace leveldb {
       return a->number < b->number;
     }
 
+    // Corresponding to "Compaction* VersionSet::PickCompaction()" in LevelDB
     Compaction *VersionSet::PickCompactionForGuards(Version *v, unsigned level,
                                                     std::vector<GuardMetaData *> *complete_guards_used_in_bg_compaction,
                                                     bool force_compact) {
