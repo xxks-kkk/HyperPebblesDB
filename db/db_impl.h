@@ -205,6 +205,8 @@ private:
 
     Status
     BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_builder) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+    Status
+    BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
     void
     RecordBackgroundError(const Status &s);

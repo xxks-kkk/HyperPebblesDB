@@ -1157,11 +1157,21 @@ DBImpl::CompactLevelThread()
             break;
         }
 
-        assert(manual_compaction_ == NULL || num_bg_threads_ == 2);
+        //TODO: num_bg_threads == 2 looks like being hard-coded
+        //assert(manual_compaction_ == NULL || num_bg_threads_ == 2);
+        assert(manual_compaction_ == NULL || num_bg_threads_ == num_bg_compaction_threads_ + 1);
 
         start_timer_simple(TOTAL_BACKGROUND_COMPACTION);
         start_timer(TOTAL_BACKGROUND_COMPACTION);
-        Status s = BackgroundCompactionGuards(&file_level_filter_builder);
+        if (!options_.parallel_guard_compaction)
+        {
+            Status s = BackgroundCompactionGuards(&file_level_filter_builder);
+        }
+        else
+        {
+            // We use parallel guard-based compaction strategy
+            Status s = BackgroundCompactionGuards2(&file_level_filter_builder);
+        }
 
         record_timer(TOTAL_BACKGROUND_COMPACTION);
         record_timer_simple(TOTAL_BACKGROUND_COMPACTION);
@@ -1255,12 +1265,16 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
 
         if (c)
         {
+            // We check if the level is about to be compacted isn't locked
+            // by others
             assert(!levels_locked_[c->level() + 0]);
             if (c->level() + 1 < config::kNumLevels)
             {
                 assert(!levels_locked_[c->level() + 1]);
+                // We lock the next level
                 levels_locked_[c->level() + 1] = true;
             }
+            // We lock the current level
             levels_locked_[c->level() + 0] = true;
         }
     }
@@ -1347,6 +1361,13 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
         manual_compaction_ = NULL;
     }
     return status;
+}
+
+Status
+DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder)
+{
+    //TODO: Implement parallel guard-based compaction strategy here
+    return nullptr;
 }
 
 void
