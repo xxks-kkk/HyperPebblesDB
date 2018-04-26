@@ -1163,14 +1163,15 @@ DBImpl::CompactLevelThread()
 
         start_timer_simple(TOTAL_BACKGROUND_COMPACTION);
         start_timer(TOTAL_BACKGROUND_COMPACTION);
+        Status s;
         if (!options_.parallel_guard_compaction)
         {
-            Status s = BackgroundCompactionGuards(&file_level_filter_builder);
+            s = BackgroundCompactionGuards(&file_level_filter_builder);
         }
         else
         {
             // We use parallel guard-based compaction strategy
-            Status s = BackgroundCompactionGuards2(&file_level_filter_builder);
+            s = BackgroundCompactionGuards2(&file_level_filter_builder);
         }
 
         record_timer(TOTAL_BACKGROUND_COMPACTION);
@@ -1367,7 +1368,8 @@ Status
 DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder)
 {
     //TODO: Implement parallel guard-based compaction strategy here
-    return nullptr;
+    Status s;
+    return s;
 }
 
 void

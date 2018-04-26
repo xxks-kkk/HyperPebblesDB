@@ -159,7 +159,7 @@ struct Options
     // in the PebblesDB paper. If this is set to false, we use the basic level-based
     // compaction strategy only.
     //
-    // Default: true
+    // Default: false
     bool parallel_guard_compaction;
 
     // Create an Options object with default values for all fields.
