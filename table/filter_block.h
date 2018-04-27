@@ -13,9 +13,12 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <memory>
+#include <limits.h> 
 #include "pebblesdb/slice.h"
 #include "util/hash.h"
 #include "util/string_builder.h"
+#include "format.h"
 
 namespace leveldb {
 
