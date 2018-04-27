@@ -82,20 +82,20 @@ class FilterBlockReader {
   FilterBlockReader(const FilterPolicy* policy, const Slice& contents);
   bool KeyMayMatch(uint64_t block_offset, const Slice& key);
     // huanchen
-  virtual Slice Seek(const Slice& key, unsigned* bitlen, const bool inclusive,
-		     uint64_t block_offset = kNotValid,
-		     const bool no_io = false,
-		     const Slice* const const_ikey_ptr = nullptr) {
-      return Slice();
-  }
+  // virtual Slice Seek(const Slice& key, unsigned* bitlen, const bool inclusive,
+	// 	     uint64_t block_offset = kNotValid,
+	// 	     const bool no_io = false,
+	// 	     const Slice* const const_ikey_ptr = nullptr) {
+  //     return Slice();
+  // }
 
-  // huanchen
-  virtual Slice SeekForPrev(const Slice& key, unsigned* bitlen, const bool inclusive,
-			    uint64_t block_offset = kNotValid,
-			    const bool no_io = false,
-			    const Slice* const const_ikey_ptr = nullptr) {
-      return Slice();
-  }
+  // // huanchen
+  // virtual Slice SeekForPrev(const Slice& key, unsigned* bitlen, const bool inclusive,
+	// 		    uint64_t block_offset = kNotValid,
+	// 		    const bool no_io = false,
+	// 		    const Slice* const const_ikey_ptr = nullptr) {
+  //     return Slice();
+  // }
 
 
  private:

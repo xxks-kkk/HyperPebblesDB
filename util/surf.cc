@@ -76,17 +76,17 @@ public:
 	return filter_->lookupKey(std::string(entry.data(), entry.size()));
     }
 
-    // huanchen
-    virtual Slice Seek(const Slice& entry, unsigned* bitlen, const bool inclusive) override {
-	surf::SuRF::Iter iter = filter_->moveToKeyGreaterThan(std::string(entry.data(), entry.size()), inclusive);
-	return Slice(iter.getKeyWithSuffix(bitlen));
-    }
+    // // huanchen
+    // virtual Slice Seek(const Slice& entry, unsigned* bitlen, const bool inclusive) override {
+	// surf::SuRF::Iter iter = filter_->moveToKeyGreaterThan(std::string(entry.data(), entry.size()), inclusive);
+	// return Slice(iter.getKeyWithSuffix(bitlen));
+    // }
 
-    // huanchen
-    virtual Slice SeekForPrev(const Slice& entry, unsigned* bitlen, const bool inclusive) override {
-	surf::SuRF::Iter iter = filter_->moveToKeyLessThan(std::string(entry.data(), entry.size()), inclusive);
-	return Slice(iter.getKeyWithSuffix(bitlen));
-    }
+    // // huanchen
+    // virtual Slice SeekForPrev(const Slice& entry, unsigned* bitlen, const bool inclusive) override {
+	// surf::SuRF::Iter iter = filter_->moveToKeyLessThan(std::string(entry.data(), entry.size()), inclusive);
+	// return Slice(iter.getKeyWithSuffix(bitlen));
+    // }
 
 private:
     char* data_;

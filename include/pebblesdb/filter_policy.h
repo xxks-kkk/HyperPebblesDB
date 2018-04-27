@@ -70,14 +70,14 @@ class FilterBitsReader {
   virtual bool MayMatch(const Slice& entry) = 0;
 
    // huanchen
-   virtual Slice Seek(const Slice& entry, unsigned* bitlen, const bool inclusive) {
-       return Slice();
-  }
+  //  virtual Slice Seek(const Slice& entry, unsigned* bitlen, const bool inclusive) {
+  //      return Slice();
+  // }
 
-   // huanchen
-   virtual Slice SeekForPrev(const Slice& entry, unsigned* bitlen, const bool inclusive) {  
-       return Slice();
-  }
+  //  // huanchen
+  //  virtual Slice SeekForPrev(const Slice& entry, unsigned* bitlen, const bool inclusive) {  
+  //      return Slice();
+  // }
 };
 
 
