@@ -43,6 +43,14 @@
 #define print_timer_info(a, b, c)
 #endif
 
+// FIX: macOS <= Mavericks doesn't define MAP_ANONYMOUS
+#ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
+#define MAP_ANONYMOUS MAP_ANON
+#else
+#define MAP_ANONYMOUS 0
+#endif
+#endif
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
