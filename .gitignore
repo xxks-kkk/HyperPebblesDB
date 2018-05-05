@@ -73,3 +73,8 @@
 cmake-build-debug/
 testPebblesDB
 gdb.txt
+.autotools
+.cproject
+.project
+.settings/
+nbproject/
