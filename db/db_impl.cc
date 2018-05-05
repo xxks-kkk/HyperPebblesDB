@@ -1338,6 +1338,7 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
 #endif
         if (guardList.size())
         {
+            // We spawn multple threads (one thread per group) to do the guard-based parallel compaction
             for (int i = 0; i < guardList.size(); ++i)
             {
                 auto
@@ -1353,6 +1354,8 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
         }
         else
         {
+            // guardList.size() == 0; we fall into level-compaction case (only one guard in the level being compacted
+            // and thus, we can only spawn one thread to do compaction, which is effectively the level-based compaction)
             CompactionState *compact = new CompactionState(c);
             start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
             status = DoCompactionWorkGuards(compact, complete_guards_used_in_bg_compaction, file_level_filter_builder);
@@ -1740,6 +1743,12 @@ DBImpl::splitGuards(std::vector<GuardMetaData *> &baseGuards, std::vector<GuardM
         std::vector<GuardMetaData *> guardList;
         if (i != baseGuards.size() - 1)
         {
+            // completeGuards contains all the existing guards + uncommited guards in the next level
+            // Use paper Figure 3 as an example. We compact Level 2 to Level 3.
+            // CompleteGuards represents all the guards in Level 3 and baseGuards represents all the guards in Level 2
+            // When we split guards, we need to have Guard 5 & 100 in the same group (guardList) with guard 5 in Level 2.
+            // Thus, we need to compare Guard 5 & 100 with Guard 375 (baseGuards[i + 1]->...) to determine until which guard
+            // we should form a guardList.
             while (j < completeGuards.size() && user_comparator()->Compare(completeGuards[j]->guard_key.user_key(),
                                                                            baseGuards[i + 1]->guard_key.user_key()) < 0)
                 guardList.push_back(completeGuards[j++]);
@@ -2084,8 +2093,18 @@ DBImpl::DoCompactionWorkGuards(CompactionState *compact,
     VersionSet::LevelSummaryStorage tmp;
     Log(options_.info_log,
         "compacted to: %s", versions_->LevelSummary(&tmp));
+    // We need to unlock and sleep
+    // to give other peer threads (i.e., other guard-based parallel threads)
+    // a chance to acquire lock during the guard-based parallel compaction
+    // Otherwise, our peer threads will never have a chance to get the lock and get their job done.
     mutex_.Unlock();
     env_->SleepForMicroseconds(800000);
+    // We need to hold the lock when we exit the function, which may not be acquired by other peer threads.
+    // This is needed because we don't want to lose the lock during the callstacks:
+    // 1) guardList.size() > 0 (multiple parallel threads):
+    //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
+    // 2) guardList.size() == 0 (single parallel thread):
+    //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkGuards
     mutex_.Lock();
     return status;
 }

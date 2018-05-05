@@ -1054,6 +1054,7 @@ namespace leveldb {
         friend class VersionSet;
 
         friend class DBImpl;
+        // We enable the copy constructor (Primer p.496 & 509)
         // Compaction(const Compaction &);
 
         Compaction &operator=(const Compaction &);

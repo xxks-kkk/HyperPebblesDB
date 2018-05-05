@@ -173,6 +173,7 @@ private:
     void
     CompactMemTableThread();
 
+    // Add two functions to support guard-based parallel compaction
     std::vector<std::vector<GuardMetaData*>> splitGuards(std::vector<GuardMetaData*> & baseGuards, std::vector<GuardMetaData*> & completeGuards);
     std::vector<Compaction*> splitCompaction(Compaction* base_compact);
 
