@@ -1218,11 +1218,28 @@ DBImpl::RecordBackgroundError(const Status &s)
     }
 }
 
+void
+DBImpl::DoCompactionWorkerBasedOnGuards(void* args) {
+    CompactionThreadInput* input = static_cast<CompactionThreadInput*>(args);
+    CompactionState *compact = new CompactionState(input->compact);
+    start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+    auto status = input->db->DoCompactionWorkGuards(compact, input->complete_guards, input->fileLevelFilterBuilder);
+    record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+    if (!status.ok())
+        input->db->RecordBackgroundError(status);
+    input->db->CleanupCompaction(compact);
+    input->compact->ReleaseInputs();
+    delete input;
+}
+
 Status
-DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_builder)
+DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder)
 {
     int x, y, z;
     mutex_.AssertHeld();
+    int owner = mutex_.owner();
+    Log(options_.info_log,
+        "[%d]Starting BackgroundCompactionGuards2...", owner);
     bool force_compact;
     Compaction *c = NULL;
     bool is_manual = (manual_compaction_ != NULL);
@@ -1289,7 +1306,6 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
     }
     else
     {
-        CompactionState *compact = new CompactionState(c);
 
         // Add the guard information in current version to edit (primarily to add the new guards in complete_guards_)
         std::set<int> level_to_load_from_complete_guards;
@@ -1303,21 +1319,42 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
                 level_to_load_from_complete_guards.insert(c->level() + 1);
             }
         }
+
         start_timer(BGC_ADD_GUARDS_TO_EDIT);
-        versions_->current()->AddGuardsToEdit(compact->compaction->edit(), level_to_load_from_complete_guards);
+        versions_->current()->AddGuardsToEdit(c->edit(), level_to_load_from_complete_guards);
         record_timer(BGC_ADD_GUARDS_TO_EDIT);
 
-        start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
-        status = DoCompactionWorkGuards(compact, complete_guards_used_in_bg_compaction, file_level_filter_builder);
-        record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
-
-        if (!status.ok())
-        {
-            RecordBackgroundError(status);
+        // split the compaction and the complete_guards_used_in_bg_compaction
+        auto guardList = splitGuards(c->guard_inputs_[0], complete_guards_used_in_bg_compaction);
+        auto compactionList = splitCompaction(c);
+        assert(guardList.size() == compactionList.size());
+        std::vector<pthread_t> threadList;
+        Log(options_.info_log,
+            "[%d]Spawning %lu threads...", owner, guardList.size());
+        if(guardList.size()) {
+            for(int i = 0; i < guardList.size(); ++i) {
+                auto tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuards, new CompactionThreadInput{
+                    this, guardList[i], compactionList[i], file_level_filter_builder
+                });
+                threadList.push_back(tid);
+            }
+            for(int i = 0; i < threadList.size(); ++i) {
+                env_->WaitForThread(threadList[i], nullptr);
+            }
         }
-
+        else {
+            CompactionState *compact = new CompactionState(c);
+            start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+            status = DoCompactionWorkGuards(compact, complete_guards_used_in_bg_compaction, file_level_filter_builder);
+            record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+            if (!status.ok()) 
+                RecordBackgroundError(status);
+            CleanupCompaction(compact);
+        }
+    
+        Log(options_.info_log,
+            "[%d]%lu threads finished.", owner, guardList.size());
         start_timer(BGC_CLEANUP_COMPACTION);
-        CleanupCompaction(compact);
         c->ReleaseInputs();
         DeleteObsoleteFiles();
         record_timer(BGC_CLEANUP_COMPACTION);
@@ -1348,28 +1385,146 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
     if (is_manual)
     {
         ManualCompaction *m = manual_compaction_;
-        if (!status.ok())
-        {
-            m->done = true;
-        }
-        if (!m->done)
-        {
-            // We only compacted part of the requested range.  Update *m
-            // to the range that is left to be compacted.
-            m->tmp_storage = manual_end;
-            m->begin = &m->tmp_storage;
+        if(m) {
+            if (!status.ok())
+            {
+                m->done = true;
+            }
+            if (!m->done)
+            {
+                // We only compacted part of the requested range.  Update *m
+                // to the range that is left to be compacted.
+                m->tmp_storage = manual_end;
+                m->begin = &m->tmp_storage;
+            }
         }
         manual_compaction_ = NULL;
     }
+    Log(options_.info_log,
+        "[%d]Exitting BackgroundCompactionGuards2.", owner);
     return status;
 }
 
-Status
-DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder)
+Status DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_builder)
 {
-    //TODO: Implement parallel guard-based compaction strategy here
-    Status s;
-    return s;
+          int x, y, z;
+      mutex_.AssertHeld();
+    int owner = mutex_.owner();
+    Log(options_.info_log,
+        "[%d]Starting BackgroundCompactionGuards...", owner);
+      bool force_compact;
+      Compaction *c = NULL;
+      bool is_manual = (manual_compaction_ != NULL);
+      InternalKey manual_end;
+      std::vector<GuardMetaData *> complete_guards_used_in_bg_compaction;
+      if (is_manual) {
+        // TODO Handle CompactRange method for guards
+        ManualCompaction *m = manual_compaction_;
+        c = versions_->CompactRange(m->level, m->begin, m->end);
+        m->done = (c == NULL);
+        if (c != NULL) {
+          // TODO not true in case of guard design
+          manual_end = c->input(0, c->num_input_files(0) - 1)->largest;
+        }
+        Log(options_.info_log,
+            "Manual compaction at level-%d from %s .. %s; will stop at %s\n",
+            m->level,
+            (m->begin ? m->begin->DebugString().c_str() : "(begin)"),
+            (m->end ? m->end->DebugString().c_str() : "(end)"),
+            (m->done ? "(end)" : manual_end.DebugString().c_str()));
+      } else {
+
+        start_timer(BGC_PICK_COMPACTION_LEVEL);
+        unsigned level = versions_->PickCompactionLevel(levels_locked_, straight_reads_ > kStraightReads,
+                                                        &force_compact);
+        record_timer(BGC_PICK_COMPACTION_LEVEL);
+
+        start_timer(BGC_PICK_COMPACTION);
+        if (level != config::kNumLevels) {
+          c = versions_->PickCompactionForGuards(versions_->current(), level, &complete_guards_used_in_bg_compaction,
+                                                 force_compact);
+        }
+        record_timer(BGC_PICK_COMPACTION);
+
+        if (c) {
+          assert(!levels_locked_[c->level() + 0]);
+          if (c->level() + 1 < config::kNumLevels) {
+            assert(!levels_locked_[c->level() + 1]);
+            levels_locked_[c->level() + 1] = true;
+          }
+          levels_locked_[c->level() + 0] = true;
+        }
+      }
+
+      Status status;
+
+      if (c == NULL) {
+//	status = Status::OK();
+        // Nothing to do
+      } else {
+
+        // Add the guard information in current version to edit (primarily to add the new guards in complete_guards_)
+        std::set<int> level_to_load_from_complete_guards;
+        // NOTE: The complete guards are copied to the guards only during background compaction and not during manual
+        // compaction. It is debatable and needs code change while picking compaction if this needs to be enabled.
+        if (!is_manual) {
+          level_to_load_from_complete_guards.insert(c->level());
+          if (!c->is_horizontal_compaction) {
+            level_to_load_from_complete_guards.insert(c->level() + 1);
+          }
+        }
+        start_timer(BGC_ADD_GUARDS_TO_EDIT);
+        versions_->current()->AddGuardsToEdit(c->edit(), level_to_load_from_complete_guards);
+        record_timer(BGC_ADD_GUARDS_TO_EDIT);
+        Log(options_.info_log, "[%d] NumOfGuardsAtLevel[%d]=%lu NumOfCompleteGuards=%lu", owner, c->level(), c->guard_inputs_[0].size(), complete_guards_used_in_bg_compaction.size());
+
+        CompactionState *compact = new CompactionState(c);
+        start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+        status = DoCompactionWorkGuards(compact, complete_guards_used_in_bg_compaction, file_level_filter_builder);
+        record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+
+        if (!status.ok()) {
+          RecordBackgroundError(status);
+        }
+
+        start_timer(BGC_CLEANUP_COMPACTION);
+        CleanupCompaction(compact);
+        c->ReleaseInputs();
+        DeleteObsoleteFiles();
+        record_timer(BGC_CLEANUP_COMPACTION);
+      }
+
+      if (c) {
+        levels_locked_[c->level() + 0] = false;
+        levels_locked_[c->level() + 1] = false;
+        delete c;
+      }
+
+      if (status.ok()) {
+        // Done
+      } else if (shutting_down_.Acquire_Load()) {
+        // Ignore compaction errors found during shutting down
+      } else {
+        Log(options_.info_log,
+            "Compaction error: %s", status.ToString().c_str());
+      }
+
+      // TODO see what is to be done here
+      if (is_manual) {
+        ManualCompaction *m = manual_compaction_;
+        if (!status.ok()) {
+          m->done = true;
+        }
+        if (!m->done) {
+          // We only compacted part of the requested range.  Update *m
+          // to the range that is left to be compacted.
+          m->tmp_storage = manual_end;
+          m->begin = &m->tmp_storage;
+        }
+        manual_compaction_ = NULL;
+      }
+    Log(options_.info_log, "[%d]Exiting BackgroundCompactionGuards...", owner);
+      return status;
 }
 
 void
@@ -1526,6 +1681,46 @@ DBImpl::InstallCompactionResults(CompactionState *compact, const int level_to_ad
     }
     return versions_->LogAndApply(compact->compaction->edit(), &mutex_, &bg_log_cv_, &bg_log_occupied_, file_numbers,
                                   file_level_filters, 0);
+}
+
+std::vector<std::vector<GuardMetaData*>> 
+DBImpl::splitGuards(std::vector<GuardMetaData*> & baseGuards, std::vector<GuardMetaData*> & completeGuards) {
+  std::vector<std::vector<GuardMetaData*>> result;
+  int j = 0;
+  for(int i = 0; i < baseGuards.size(); ++i) {
+    std::vector<GuardMetaData*> guardList;
+    if(i != baseGuards.size() - 1) {
+      while(j < completeGuards.size() && user_comparator()->Compare(completeGuards[j]->guard_key.user_key(), baseGuards[i + 1]->guard_key.user_key()) < 0)
+        guardList.push_back(completeGuards[j++]);
+    }
+    else
+      guardList = std::vector<GuardMetaData*>(completeGuards.begin() + j, completeGuards.end());
+    result.push_back(guardList);
+  }
+  return result;
+}
+
+std::vector<Compaction*> 
+DBImpl::splitCompaction(Compaction * base_compact) {
+    std::vector<Compaction*> compactionList;
+    auto secondLevelGuards = splitGuards(base_compact->guard_inputs_[0], base_compact->guard_inputs_[1]);
+    for(int i = 0; i < base_compact->guard_inputs_[0].size(); ++i) {
+        Compaction *compaction = new Compaction(*base_compact);
+        compaction->input_version_->Ref();
+        compaction->guard_inputs_[0] = {base_compact->guard_inputs_[0][i]};
+        compaction->guard_inputs_[1] = secondLevelGuards[i];
+        compaction->inputs_[0] = base_compact->guard_inputs_[0][i]->file_metas;
+        compaction->inputs_[1] = {};
+        for(auto && subGuards: secondLevelGuards[i])
+            compaction->inputs_[1].insert(compaction->inputs_[1].end(), subGuards->file_metas.begin(),
+                    subGuards->file_metas.end());
+        if(i != 0) {
+            compaction->sentinel_inputs_[0] = {};
+            compaction->sentinel_inputs_[1] = {};
+        }
+        compactionList.push_back(compaction);
+    }
+    return compactionList;
 }
 
 Status
@@ -1835,6 +2030,9 @@ DBImpl::DoCompactionWorkGuards(CompactionState *compact,
     VersionSet::LevelSummaryStorage tmp;
     Log(options_.info_log,
         "compacted to: %s", versions_->LevelSummary(&tmp));
+    mutex_.Unlock();
+    env_->SleepForMicroseconds(800000);
+    mutex_.Lock();
     return status;
 }
 

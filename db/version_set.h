@@ -1047,13 +1047,14 @@ namespace leveldb {
         std::string DebugString();
 
         bool is_horizontal_compaction;
-
+        
     private:
         friend class Version;
 
         friend class VersionSet;
 
-        Compaction(const Compaction &);
+        friend class DBImpl;
+        // Compaction(const Compaction &);
 
         Compaction &operator=(const Compaction &);
 

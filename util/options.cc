@@ -25,7 +25,7 @@ Options::Options()
       compression(kNoCompression),
       filter_policy(NULL),
       manual_garbage_collection(false),
-      parallel_guard_compaction(false)
+      parallel_guard_compaction(true)
 {
 }
 

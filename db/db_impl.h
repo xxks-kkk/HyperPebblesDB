@@ -138,6 +138,8 @@ public:
 
 private:
     friend class DB;
+    // workaround
+    friend class Compaction;
     struct CompactionState;
     struct Writer;
 
@@ -167,8 +169,12 @@ private:
     // successful.
     static void
     CompactMemTableWrapper(void *db) { reinterpret_cast<DBImpl *>(db)->CompactMemTableThread(); }
+
     void
     CompactMemTableThread();
+
+    std::vector<std::vector<GuardMetaData*>> splitGuards(std::vector<GuardMetaData*> & baseGuards, std::vector<GuardMetaData*> & completeGuards);
+    std::vector<Compaction*> splitCompaction(Compaction* base_compact);
 
     Status
     RecoverLogFile(uint64_t log_number,
@@ -195,7 +201,6 @@ private:
     // REQUIRES: writers_mutex_ not held
     void
     WaitOutWriters();
-
     static void
     CompactLevelWrapper(void *db) { reinterpret_cast<DBImpl *>(db)->CompactLevelThread(); }
     void
@@ -220,6 +225,17 @@ private:
     Status
     DoCompactionWorkForGuardsInALevel(CompactionState *compact)
     EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+    struct CompactionThreadInput {
+        DBImpl* db;
+        std::vector<GuardMetaData*> complete_guards;
+        Compaction* compact;
+        FileLevelFilterBuilder* fileLevelFilterBuilder;
+    };
+
+    static void
+    DoCompactionWorkerBasedOnGuards(void* args);
+
     Status
     DoCompactionWorkGuards(CompactionState *compact,
                            std::vector<GuardMetaData *> complete_guards_used_in_bg_compaction,

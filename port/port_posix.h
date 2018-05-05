@@ -105,6 +105,10 @@ class Mutex {
   void Unlock();
   void AssertHeld() { }
 
+  int owner() {
+    return mu_.__data.__owner;
+  }
+
  private:
   friend class CondVar;
   pthread_mutex_t mu_;
