@@ -1746,7 +1746,8 @@ DBImpl::splitGuards(std::vector<GuardMetaData *> &baseGuards, std::vector<GuardM
             // completeGuards contains all the existing guards + uncommited guards in the next level
             // Use paper Figure 3 as an example. We compact Level 2 to Level 3.
             // CompleteGuards represents all the guards in Level 3 and baseGuards represents all the guards in Level 2
-            // When we split guards, we need to have Guard 5 & 100 in the same group (guardList) with guard 5 in Level 2.
+            // When we split guards, we need to have Guard 5 & 100 in the same group (guardList), which is under guard 5 in Level 2.
+            // (result[i] contains Guard 5 & 100 in Level 3; baseGuards[i] contains Guard 5 in Level 2)
             // Thus, we need to compare Guard 5 & 100 with Guard 375 (baseGuards[i + 1]->...) to determine until which guard
             // we should form a guardList.
             while (j < completeGuards.size() && user_comparator()->Compare(completeGuards[j]->guard_key.user_key(),
