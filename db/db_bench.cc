@@ -267,6 +267,7 @@ namespace leveldb {
             }
 
             void FinishedSingleOp() {
+		      // printf("FinshedSingleOp Called! done=%d next_report=%d\n", done_, next_report_);
               if (FLAGS_histogram) {
                 double now = Env::Default()->NowMicros();
                 double micros = now - last_op_finish_;
@@ -585,6 +586,7 @@ namespace leveldb {
 
           char file_names[20][100];
           int num_trace_files = split_file_names(file, file_names);
+		  printf("Preparing to read %d trace files.\n", num_trace_files);
 
           const char *corresponding_file;
           if (tid >= num_trace_files) {
@@ -592,7 +594,7 @@ namespace leveldb {
           } else {
             corresponding_file = file_names[tid];
           }
-          printf("Thread %d: Parsing trace ...\n", tid);
+          printf("Thread %d: Parsing trace [%s]...\n", tid, corresponding_file);
           trace_ops[tid] = (struct trace_operation_t *) mmap(NULL, MAX_TRACE_OPS * sizeof(struct trace_operation_t),
                                                              PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,
                                                              0);
@@ -635,9 +637,11 @@ namespace leveldb {
           Status status;
           static struct ReadOptions roptions;
           static struct WriteOptions woptions;
+		  WriteBatch wbatch;
 
           keylen = sprintf(keybuf, "user%llu", op->key);
           Slice key(keybuf, keylen);
+		  WriteBatch batch;
 
           struct result_t &result = results[tid];
           if (op->cmd == 'r') {
@@ -658,7 +662,9 @@ namespace leveldb {
             result.kv_d++;
           } else if (op->cmd == 'i') {
             // op->param refers to the size of the value.
-            status = db->Put(woptions, key, Slice(valuebuf, op->param));
+			wbatch.Clear();
+			wbatch.Put(key, Slice(valuebuf, op->param));
+			status = db->Write(woptions, &wbatch);
             sassert(status.ok());
             result.ycsbdata += keylen + op->param;
             result.kvdata += keylen + op->param;
@@ -666,7 +672,9 @@ namespace leveldb {
             result.kv_p++;
           } else if (op->cmd == 'u') {
             int update_value_size = 1024;
-            status = db->Put(woptions, key, Slice(valuebuf, update_value_size));
+			wbatch.Clear();
+			wbatch.Put(key, Slice(valuebuf, update_value_size));
+			status = db->Write(woptions, &wbatch);
             sassert(status.ok());
             result.ycsbdata += keylen + op->param;
             result.kvdata += keylen + update_value_size;
@@ -1582,7 +1590,6 @@ namespace leveldb {
         }
 
         void PrintStats(const char *key) {
-		  printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
           printf("Printing Stats of %s:\n", key);
           std::string stats;
           if (!db_->GetProperty(key, &stats)) {
