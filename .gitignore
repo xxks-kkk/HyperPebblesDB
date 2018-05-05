@@ -67,11 +67,14 @@
 /Makefile.old
 /missing
 /stamp-h1
-<<<<<<< HEAD
-=======
 
 .idea/
+.vscode/
 cmake-build-debug/
 testPebblesDB
 gdb.txt
->>>>>>> 3985feeada00e445ee295cf3fa89ad7710b67b10
+.autotools
+.cproject
+.project
+.settings/
+nbproject/
