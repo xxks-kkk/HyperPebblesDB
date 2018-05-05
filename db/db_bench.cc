@@ -871,6 +871,7 @@ namespace leveldb {
             int num_threads = FLAGS_threads;
 
             if (name == Slice("ycsb")) {
+		      fresh_db = true;
               method = &Benchmark::YCSB;
             } else if (name == Slice("fillseq")) {
               //fresh_db = true;
@@ -1595,6 +1596,8 @@ namespace leveldb {
             stats = "(failed)";
           }
           fprintf(stdout, "\n%s\n", stats.c_str());
+		  printf("done.\n");
+		  printf("========================================\n");
         }
 
         static void WriteToFile(void *arg, const char *buf, int n) {
