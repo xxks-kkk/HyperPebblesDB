@@ -102,6 +102,7 @@ public:
 	: hash_suffix_len_(hash_suffix_len), real_suffix_len_(real_suffix_len), include_dense_(include_dense),
 	  sparse_dense_ratio_(sparse_dense_ratio),
 	  use_block_based_builder_(use_block_based_builder) {
+		  printf("here choose suffix type");
 	if (suffix_type == 1)
 	    suffix_type_ = surf::kHash;
 	else if (suffix_type == 2)
@@ -117,8 +118,9 @@ public:
 	return "rocksdb.SuRFFilter";
     }
 
-    virtual void CreateFilter(const Slice* keys, int n,
+    void CreateFilter(const Slice* keys, int n,
 			      std::string* dst) const override {
+	printf("build the filter here\n");
 	std::vector<std::string> keys_str;
 	for (size_t i = 0; i < (size_t)n; i++)
 	    keys_str.push_back(std::string(keys[i].data(), keys[i].size()));
@@ -134,6 +136,12 @@ public:
 
     virtual bool KeyMayMatch(const Slice& key,
 			     const Slice& filter) const override {
+	// check the size of the filter
+	// how the size represent and how does it change
+	const size_t len = filter.size();
+	printf("initial filter size %lu bytes\n", len);
+	if (len < 2) return false;
+
 	char* filter_data = const_cast<char*>(filter.data());
 	char* data = filter_data;
 	surf::SuRF* filter_surf = surf::SuRF::deSerialize(data);

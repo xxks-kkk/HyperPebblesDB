@@ -142,7 +142,7 @@ extern const FilterPolicy* NewSuRFPolicy(int suffix_type = 0,
                                         uint32_t hash_suffix_len = 0,
                                         uint32_t real_suffic_len = 0,
                                         bool inclue_dense = true,
-                                        uint32_t sparse_dense_ratio = 16,
+                                        uint32_t sparse_dense_ratio = 0,
                                         bool use_block_based_builder = true);
 }
 
