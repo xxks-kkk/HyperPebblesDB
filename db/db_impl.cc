@@ -1222,14 +1222,21 @@ void
 DBImpl::DoCompactionWorkerBasedOnGuards(void *args)
 {
     CompactionThreadInput *input = static_cast<CompactionThreadInput *>(args);
+    input->db->mutex_.Lock();
     CompactionState *compact = new CompactionState(input->compact);
     start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
-    auto status = input->db->DoCompactionWorkGuards(compact, input->complete_guards, input->fileLevelFilterBuilder);
+    FileLevelFilterBuilder *file_level_filter_builder = input->fileLevelFilterBuilder ? input->fileLevelFilterBuilder : new FileLevelFilterBuilder(input->db->options_.filter_policy);
+    auto status = input->db->DoCompactionWorkGuards(compact, input->complete_guards, file_level_filter_builder);
     record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
     if (!status.ok())
         input->db->RecordBackgroundError(status);
     input->db->CleanupCompaction(compact);
     input->compact->ReleaseInputs();
+    input->db->mutex_.Unlock();
+    if(!input->fileLevelFilterBuilder)
+    {
+        delete file_level_filter_builder;
+    }
     delete input;
 }
 
@@ -1338,12 +1345,13 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
 #endif
         if (guardList.size())
         {
+            mutex_.Unlock();
             // We spawn multple threads (one thread per group) to do the guard-based parallel compaction
             for (int i = 0; i < guardList.size(); ++i)
             {
                 auto
                     tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuards, new CompactionThreadInput{
-                    this, guardList[i], compactionList[i], file_level_filter_builder
+                    this, guardList[i], compactionList[i], nullptr
                 });
                 threadList.push_back(tid);
             }
@@ -1351,6 +1359,7 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
             {
                 env_->WaitForThread((unsigned long)threadList[i], nullptr);
             }
+            mutex_.Lock();
         }
         else
         {
@@ -2098,15 +2107,15 @@ DBImpl::DoCompactionWorkGuards(CompactionState *compact,
     // to give other peer threads (i.e., other guard-based parallel threads)
     // a chance to acquire lock during the guard-based parallel compaction
     // Otherwise, our peer threads will never have a chance to get the lock and get their job done.
-    mutex_.Unlock();
-    env_->SleepForMicroseconds(800000);
+    //mutex_.Unlock();
+    //env_->SleepForMicroseconds(800000);
     // We need to hold the lock when we exit the function, which may not be acquired by other peer threads.
     // This is needed because we don't want to lose the lock during the callstacks:
     // 1) guardList.size() > 0 (multiple parallel threads):
     //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
     // 2) guardList.size() == 0 (single parallel thread):
     //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkGuards
-    mutex_.Lock();
+    //mutex_.Lock();
     return status;
 }
 
