@@ -139,6 +139,9 @@ static int FLAGS_num_next = 1;
 // Base key which gets added to the randodm key generated
 static int FLAGS_base_key = 0;
 
+// Turn On/Off parallized guard-based compaction
+static int FLAGS_paraguard = 0;
+
 // Bloom filter bits per key.
 // Negative means use default settings.
 static int FLAGS_bloom_bits = 10;
@@ -1224,6 +1227,7 @@ namespace leveldb {
           options.max_open_files = FLAGS_open_files;
           options.block_size = FLAGS_block_size;
           options.filter_policy = filter_policy_;
+          options.parallel_guard_compaction = FLAGS_paraguard;
           Status s = DB::Open(options, FLAGS_db, &db_);
           if (!s.ok()) {
             fprintf(stderr, "open error: %s\n", s.ToString().c_str());
@@ -1670,6 +1674,8 @@ int main(int argc, char **argv) {
       FLAGS_num_next = n;
     } else if (sscanf(argv[i], "--base_key=%d%c", &n, &junk) == 1) {
       FLAGS_base_key = n;
+    } else if (sscanf(argv[i], "--paraguard=%d%c", &n, &junk) == 1) {
+      FLAGS_paraguard = n;
     } else if (strncmp(argv[i], "--db=", 5) == 0) {
       FLAGS_db = argv[i] + 5;
     } else {
