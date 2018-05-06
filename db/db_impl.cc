@@ -1341,10 +1341,10 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
         assert(guardList.size() == compactionList.size());
         std::vector<pthread_t> threadList;
 #ifndef __APPLE__
-        Log(options_.info_log,
-            "[%d]Spawning %lu threads...", owner, guardList.size());
+			Log(options_.info_log,
+			    "[%d]Spawning %lu threads...", owner, guardList.size());
 #endif
-        if (guardList.size())
+        if (guardList.size() > 1)
         {
             /*
                 The lock management logic:
