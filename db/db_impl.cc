@@ -1232,6 +1232,7 @@ DBImpl::DoCompactionWorkerBasedOnGuards(void *args)
         input->db->RecordBackgroundError(status);
     input->db->CleanupCompaction(compact);
     input->compact->ReleaseInputs();
+    // Other peer "DoCompactionWorkerBasedOnGuards" calls from peer threads can have chance acquire locks
     input->db->mutex_.Unlock();
     if(!input->fileLevelFilterBuilder)
     {
@@ -1345,6 +1346,27 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
 #endif
         if (guardList.size())
         {
+            /*
+                The lock management logic:
+
+                The call stack for guard-based parallel compaction is following:
+
+                1) guardList.size() > 0 (multiple parallel threads):
+                    CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
+                2) guardList.size() == 0 (single parallel thread):
+                    CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkGuards
+
+                We acquire lock at the beginning of `CompactLevelThread' and we expect to keep it at beginning of `BackgroundCompactionGuards2'.
+                During the level-based compaction, since there is only one thread to perform compaction, it can hold the lock when entering
+                `DoCompactionWorkGuards' and unlock it temporarily and acquire it back by the end of the function call. However, situation changes
+                for guard-based parallel compaction because we'll have multiple threads (equal to the number of guards in the level being compacted)
+                performing compaction. Thus, all threads need to have a chance to acquire a lock. That's why we release lock right before we
+                spawn multiple compaction threads. In each thread, he need to acquire lock in `DoCompactionWorkerBasedOnGuards' and call `DoCompactionWorkGuards',
+                which the same lock holding situation in level-based compaction (entering `DoCompactionWorkerBasedOnGuards' with lock). At the end of
+                `DoCompactionWorkerBasedOnGuards', the thread needs to release lock to give his peer threads a chance to acquire the lock and do their compaction
+                work. After the 'WaitForThread', we need to lock again to have the same lock holding situation as level-based compaction. To see what's the 
+                level-based compaction locking holding situation looks like, commit 186c5e2109df64e516bdd7b7af708e74baa4407c is a good starting point.
+            */
             mutex_.Unlock();
             // We spawn multple threads (one thread per group) to do the guard-based parallel compaction
             for (int i = 0; i < guardList.size(); ++i)
@@ -2103,19 +2125,6 @@ DBImpl::DoCompactionWorkGuards(CompactionState *compact,
     VersionSet::LevelSummaryStorage tmp;
     Log(options_.info_log,
         "compacted to: %s", versions_->LevelSummary(&tmp));
-    // We need to unlock and sleep
-    // to give other peer threads (i.e., other guard-based parallel threads)
-    // a chance to acquire lock during the guard-based parallel compaction
-    // Otherwise, our peer threads will never have a chance to get the lock and get their job done.
-    //mutex_.Unlock();
-    //env_->SleepForMicroseconds(800000);
-    // We need to hold the lock when we exit the function, which may not be acquired by other peer threads.
-    // This is needed because we don't want to lose the lock during the callstacks:
-    // 1) guardList.size() > 0 (multiple parallel threads):
-    //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
-    // 2) guardList.size() == 0 (single parallel thread):
-    //      CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkGuards
-    //mutex_.Lock();
     return status;
 }
 
