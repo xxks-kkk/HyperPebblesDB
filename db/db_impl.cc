@@ -1171,7 +1171,7 @@ DBImpl::CompactLevelThread()
         else
         {
             // We use parallel guard-based compaction strategy
-            s = BackgroundCompactionGuards2(&file_level_filter_builder);
+            s = BackgroundCompactionGuardsParallel(&file_level_filter_builder);
         }
 
         record_timer(TOTAL_BACKGROUND_COMPACTION);
@@ -1242,14 +1242,14 @@ DBImpl::DoCompactionWorkerBasedOnGuards(void *args)
 }
 
 Status
-DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_builder)
+DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_filter_builder)
 {
     int x, y, z;
     mutex_.AssertHeld();
 #ifndef __APPLE__
     int owner = mutex_.owner();
     Log(options_.info_log,
-        "[%d]Starting BackgroundCompactionGuards2...", owner);
+        "[%d]Starting BackgroundCompactioParallel...", owner);
 #endif
     bool force_compact;
     Compaction *c = NULL;
@@ -1352,11 +1352,11 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
                 The call stack for guard-based parallel compaction is following:
 
                 1) guardList.size() > 0 (multiple parallel threads):
-                    CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
+                    CompactLevelThread -> BackgroundCompactionGuardsParallel -> DoCompactionWorkerBasedOnGuards -> DoCompactionWorkGuards
                 2) guardList.size() == 0 (single parallel thread):
-                    CompactLevelThread -> BackgroundCompactionGuards2 -> DoCompactionWorkGuards
+                    CompactLevelThread -> BackgroundCompactionGuardsParallel -> DoCompactionWorkGuards
 
-                We acquire lock at the beginning of `CompactLevelThread' and we expect to keep it at beginning of `BackgroundCompactionGuards2'.
+                We acquire lock at the beginning of `CompactLevelThread' and we expect to keep it at beginning of `BackgroundCompactionGuardsParallel'.
                 During the level-based compaction, since there is only one thread to perform compaction, it can hold the lock when entering
                 `DoCompactionWorkGuards' and unlock it temporarily and acquire it back by the end of the function call. However, situation changes
                 for guard-based parallel compaction because we'll have multiple threads (equal to the number of guards in the level being compacted)
@@ -1448,7 +1448,7 @@ DBImpl::BackgroundCompactionGuards2(FileLevelFilterBuilder *file_level_filter_bu
     }
 #ifndef __APPLE__
     Log(options_.info_log,
-        "[%d]Exitting BackgroundCompactionGuards2.", owner);
+        "[%d]Exitting BackgroundCompactionGuardsParallel.", owner);
 #endif
     return status;
 }
