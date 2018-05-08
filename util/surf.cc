@@ -120,7 +120,7 @@ public:
 
     void CreateFilter(const Slice* keys, int n,
 			      std::string* dst) const override {
-	printf("build the filter here\n");
+//	printf("build the filter here\n");
 	std::vector<std::string> keys_str;
 	for (size_t i = 0; i < (size_t)n; i++)
 	    keys_str.push_back(std::string(keys[i].data(), keys[i].size()));
@@ -131,6 +131,7 @@ public:
 	char* data = filter->serialize();
 	dst->append(data, size);
 	filter->destroy();
+	delete[] data;
 	delete filter;
     }
 
@@ -139,13 +140,14 @@ public:
 	// check the size of the filter
 	// how the size represent and how does it change
 	const size_t len = filter.size();
-	printf("initial filter size %lu bytes\n", len);
+//	printf("initial filter size %lu bytes\n", len);
 	if (len < 2) return false;
 
 	char* filter_data = const_cast<char*>(filter.data());
 	char* data = filter_data;
 	surf::SuRF* filter_surf = surf::SuRF::deSerialize(data);
 	bool found = filter_surf->lookupKey(std::string(key.data(), key.size()));
+//	filter_surf->destroy();
 	delete filter_surf;
 	return found;
     }
