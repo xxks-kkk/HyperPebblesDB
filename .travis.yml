@@ -10,6 +10,7 @@ compiler:
   - gcc
 os:
   - linux
+  - osx
 
 addons:
   apt:
@@ -25,6 +26,14 @@ addons:
     - libtool
 
 install:
+
+- if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew update;
+    if [ -L /usr/local/include/c++ ]; then rm /usr/local/include/c++; fi;
+    brew install gcc@5;
+    brew install snappy;
+  fi
+
 # /usr/bin/gcc is stuck to old versions on both Linux and OSX.
 - if [ "$CXX" = "g++" ]; then export CXX="g++-5"; fi
 - echo ${CXX}

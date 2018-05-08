@@ -43,6 +43,14 @@
 #define print_timer_info(a, b, c)
 #endif
 
+// FIX: macOS <= Mavericks doesn't define MAP_ANONYMOUS
+#ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
+#define MAP_ANONYMOUS MAP_ANON
+#else
+#define MAP_ANONYMOUS 0
+#endif
+#endif
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
@@ -130,6 +138,9 @@ static int FLAGS_num_next = 1;
 
 // Base key which gets added to the randodm key generated
 static int FLAGS_base_key = 0;
+
+// Turn On/Off parallized guard-based compaction
+static int FLAGS_paraguard = 0;
 
 // Bloom filter bits per key.
 // Negative means use default settings.
@@ -259,6 +270,7 @@ namespace leveldb {
             }
 
             void FinishedSingleOp() {
+		      // printf("FinshedSingleOp Called! done=%d next_report=%d\n", done_, next_report_);
               if (FLAGS_histogram) {
                 double now = Env::Default()->NowMicros();
                 double micros = now - last_op_finish_;
@@ -577,6 +589,7 @@ namespace leveldb {
 
           char file_names[20][100];
           int num_trace_files = split_file_names(file, file_names);
+		  printf("Preparing to read %d trace files.\n", num_trace_files);
 
           const char *corresponding_file;
           if (tid >= num_trace_files) {
@@ -584,7 +597,7 @@ namespace leveldb {
           } else {
             corresponding_file = file_names[tid];
           }
-          printf("Thread %d: Parsing trace ...\n", tid);
+          printf("Thread %d: Parsing trace [%s]...\n", tid, corresponding_file);
           trace_ops[tid] = (struct trace_operation_t *) mmap(NULL, MAX_TRACE_OPS * sizeof(struct trace_operation_t),
                                                              PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,
                                                              0);
@@ -627,9 +640,11 @@ namespace leveldb {
           Status status;
           static struct ReadOptions roptions;
           static struct WriteOptions woptions;
+		  WriteBatch wbatch;
 
           keylen = sprintf(keybuf, "user%llu", op->key);
           Slice key(keybuf, keylen);
+		  WriteBatch batch;
 
           struct result_t &result = results[tid];
           if (op->cmd == 'r') {
@@ -650,7 +665,9 @@ namespace leveldb {
             result.kv_d++;
           } else if (op->cmd == 'i') {
             // op->param refers to the size of the value.
-            status = db->Put(woptions, key, Slice(valuebuf, op->param));
+			wbatch.Clear();
+			wbatch.Put(key, Slice(valuebuf, op->param));
+			status = db->Write(woptions, &wbatch);
             sassert(status.ok());
             result.ycsbdata += keylen + op->param;
             result.kvdata += keylen + op->param;
@@ -658,7 +675,9 @@ namespace leveldb {
             result.kv_p++;
           } else if (op->cmd == 'u') {
             int update_value_size = 1024;
-            status = db->Put(woptions, key, Slice(valuebuf, update_value_size));
+			wbatch.Clear();
+			wbatch.Put(key, Slice(valuebuf, update_value_size));
+			status = db->Write(woptions, &wbatch);
             sassert(status.ok());
             result.ycsbdata += keylen + op->param;
             result.kvdata += keylen + update_value_size;
@@ -855,6 +874,7 @@ namespace leveldb {
             int num_threads = FLAGS_threads;
 
             if (name == Slice("ycsb")) {
+		      fresh_db = true;
               method = &Benchmark::YCSB;
             } else if (name == Slice("fillseq")) {
               //fresh_db = true;
@@ -1207,6 +1227,7 @@ namespace leveldb {
           options.max_open_files = FLAGS_open_files;
           options.block_size = FLAGS_block_size;
           options.filter_policy = filter_policy_;
+          options.parallel_guard_compaction = FLAGS_paraguard;
           Status s = DB::Open(options, FLAGS_db, &db_);
           if (!s.ok()) {
             fprintf(stderr, "open error: %s\n", s.ToString().c_str());
@@ -1573,11 +1594,14 @@ namespace leveldb {
         }
 
         void PrintStats(const char *key) {
+          printf("Printing Stats of %s:\n", key);
           std::string stats;
           if (!db_->GetProperty(key, &stats)) {
             stats = "(failed)";
           }
           fprintf(stdout, "\n%s\n", stats.c_str());
+		  printf("done.\n");
+		  printf("========================================\n");
         }
 
         static void WriteToFile(void *arg, const char *buf, int n) {
@@ -1650,6 +1674,8 @@ int main(int argc, char **argv) {
       FLAGS_num_next = n;
     } else if (sscanf(argv[i], "--base_key=%d%c", &n, &junk) == 1) {
       FLAGS_base_key = n;
+    } else if (sscanf(argv[i], "--paraguard=%d%c", &n, &junk) == 1) {
+      FLAGS_paraguard = n;
     } else if (strncmp(argv[i], "--db=", 5) == 0) {
       FLAGS_db = argv[i] + 5;
     } else {
