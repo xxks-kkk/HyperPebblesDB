@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <cmath>
+#include <sstream>
 #include "db/dbformat.h"
 #include "db/filename.h"
 #include "db/log_reader.h"
@@ -3777,6 +3778,20 @@ void VersionSet::SetupOtherInputs(Compaction* c) {
       }
     }
 
+    std::string Compaction::SummaryString() {
+      std::stringstream ss;
+      ss << "Compaction level --> " << level_ << std::endl;
+      for(unsigned which = 0; which < 2; ++which) {
+        size_t size_sum = 0;
+        unsigned file_num = inputs_[which].size();
+        for(auto && j: inputs_[which])
+          size_sum += j->file_size;
+        ss << "Level " << which + level_ << " : " << file_num << " files " << size_sum << " bytes " 
+          << guard_inputs_[which].size()<< " guards\n";
+      }
+      return ss.str();
+    }
+
     std::string Compaction::DebugString() {
       std::string r;
       r.append("Compaction level --> ");
@@ -3787,8 +3802,8 @@ void VersionSet::SetupOtherInputs(Compaction* c) {
         //   --- level 1 ---
         //   17:123['a' .. 'd']
         //   20:43['e' .. 'g']
-        r.append("--------------------- which ");
-        AppendNumberTo(&r, level);
+        r.append("--------------------- Level ");
+        AppendNumberTo(&r, level_ + level);
         r.append(" ---------------------\n");
 
         // Appending file information
