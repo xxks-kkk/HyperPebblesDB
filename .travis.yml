@@ -31,8 +31,10 @@ addons:
 
 # Use sed to replace the SSH URL with the public URL, then initialize submodules
 before_install:
-    - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-    - git submodule update --init --recursive
+    - git submodule update --init
+    - cd third-party/SuRF
+    - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules    
+    - git submodule update --init --recursive    
 
 install:
 
