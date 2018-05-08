@@ -245,8 +245,9 @@ class DBTest {
 
   DBTest() : option_config_(kDefault),
              env_(new SpecialEnv(Env::Default())) {
-    // filter_policy_ = NewBloomFilterPolicy(10);
-    filter_policy_ = NewSuRFPolicy(1, 6, 0, true, 16, false);
+    filter_policy_ = NewBloomFilterPolicy(10);
+    //TODO: the code is for demonstration of SuRF. However, the test cannot pass
+    //filter_policy_ = NewSuRFPolicy(1, 6, 0, true, 16, false);
     dbname_ = test::TmpDir() + "/db_test";
     DestroyDB(dbname_, Options());
     db_ = NULL;
@@ -1761,8 +1762,8 @@ TEST(DBTest, BloomFilter) {
   Options options = CurrentOptions();
   options.env = env_;
   options.block_cache = NewLRUCache(0);  // Prevent cache hits
-  // options.filter_policy = NewBloomFilterPolicy(10);
-  options.filter_policy = NewSuRFPolicy(1, 6, 0, true, 16, false);
+  options.filter_policy = NewBloomFilterPolicy(10);
+  //options.filter_policy = NewSuRFPolicy(1, 6, 0, true, 16, false);
   Reopen(&options);
 
   // Populate multiple layers

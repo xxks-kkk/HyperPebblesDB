@@ -61,3 +61,5 @@ script:
 - make
 - make db_test
 - ./db_test
+- make surf_test
+- ./surf_test
