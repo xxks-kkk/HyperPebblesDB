@@ -14,8 +14,7 @@ with open(log_file + "_res.csv", "w") as f:
         level = lines[0].split(' ')[-1]
         file_size = int(lines[1].split(' ')[5]) + int(lines[2].split(' ')[5])
         file_num = int(lines[1].split(' ')[3]) + int(lines[2].split(' ')[3])
-        guards = int(lines[1].split(' ')[7]) + int(lines[2].split(' ')[7])
-        guards = int(lines[1].split(' ')[7]) + int(lines[2].split(' ')[7])
+        guards = int(lines[1].split(' ')[7])
         micros = lines[3].split(' ')[-2]
         writer.writerow([level, guards, file_num, file_size, micros])
         print([level, guards, file_num, file_size, micros])
