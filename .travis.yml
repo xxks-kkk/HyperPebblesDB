@@ -33,7 +33,7 @@ addons:
 before_install:
     - git submodule update --init
     - cd third-party/SuRF
-    - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules    
+    - sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules    
     - git submodule update --init --recursive
     - cd ../../
 

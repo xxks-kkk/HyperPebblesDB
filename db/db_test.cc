@@ -246,8 +246,6 @@ class DBTest {
   DBTest() : option_config_(kDefault),
              env_(new SpecialEnv(Env::Default())) {
     filter_policy_ = NewBloomFilterPolicy(10);
-    //TODO: the code is for demonstration of SuRF. However, the test cannot pass
-    //filter_policy_ = NewSuRFPolicy(1, 6, 0, true, 16, false);
     dbname_ = test::TmpDir() + "/db_test";
     DestroyDB(dbname_, Options());
     db_ = NULL;
@@ -1763,7 +1761,57 @@ TEST(DBTest, BloomFilter) {
   options.env = env_;
   options.block_cache = NewLRUCache(0);  // Prevent cache hits
   options.filter_policy = NewBloomFilterPolicy(10);
-  //options.filter_policy = NewSuRFPolicy(1, 6, 0, true, 16, false);
+  Reopen(&options);
+
+  // Populate multiple layers
+  const int N = 10000;
+  for (int i = 0; i < N; i++) {
+    ASSERT_OK(Put(Key(i), Key(i)));
+  }
+  Compact("a", "z");
+  for (int i = 0; i < N; i += 100) {
+    ASSERT_OK(Put(Key(i), Key(i)));
+  }
+  dbfull()->TEST_CompactMemTable();
+
+  // Prevent auto compactions triggered by seeks
+  env_->delay_data_sync_.Release_Store(env_);
+
+  // Lookup present keys.  Should rarely read from small sstable.
+  for (int i = 0; i < N; i++) {
+    ASSERT_EQ(Key(i), Get(Key(i)));
+  }
+ 
+  //Count number of files read to Get() N existing values in the db
+  //Extra reads should be less than 3%
+  int reads_1 = db_->total_files_read;
+  fprintf(stderr, "%d present => %d reads\n", N, reads_1);
+  ASSERT_GE(reads_1, N);
+  ASSERT_LE(reads_1, N + 3*N/100);
+
+  // Lookup present keys.  Should rarely read from either sstable.
+  for (int i = 0; i < N; i++) {
+    ASSERT_EQ("NOT_FOUND", Get(Key(i) + ".missing"));
+  }
+  
+  //Files read to serve Get() of N non existant keys.
+  //Should not exceed 3%
+  int reads_2 = db_->total_files_read - reads_1;
+  fprintf(stderr, "%d missing => %d reads\n", N, reads_2);
+  ASSERT_LE(reads_2, 3*N/100);
+
+  env_->delay_data_sync_.Release_Store(NULL);
+  Close();
+  delete options.block_cache;
+  delete options.filter_policy;
+}
+
+TEST(DBTest, SuRFFilter) {
+  env_->count_random_reads_ = true;
+  Options options = CurrentOptions();
+  options.env = env_;
+  options.block_cache = NewLRUCache(0);  // Prevent cache hits
+  options.filter_policy = NewSuRFPolicy(1, 7, 0, true, 16, false);
   Reopen(&options);
 
   // Populate multiple layers
