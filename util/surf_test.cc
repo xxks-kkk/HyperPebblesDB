@@ -25,7 +25,7 @@ namespace leveldb {
             std::vector<std::string> keys_;
 
         public:
-            SurfTest() : policy_(NewSuRFPolicy(1, 8, 0, true, 0, true)) { }  
+            SurfTest() : policy_(NewSuRFPolicy(1, 2, 0, true, 0, false)) { }  
             // tune the parameter
 
 
@@ -45,12 +45,12 @@ namespace leveldb {
 
         void Build() {
             std::vector<Slice> key_slices;
-            printf("key size %lu\n", keys_.size());
+            // printf("key size %lu\n", keys_.size());
             for (size_t i = 0; i < keys_.size(); i++) {
             key_slices.push_back(Slice(keys_[i]));
             }
             filter_.clear();
-            printf("key size %lu\n", key_slices.size());
+            // printf("key size %lu\n", key_slices.size());
             policy_->CreateFilter(&key_slices[0], key_slices.size(), &filter_);
             keys_.clear();
             if (kVerbose >= 2) DumpFilter();
@@ -83,7 +83,7 @@ namespace leveldb {
             char buffer[sizeof(int)];
             int result = 0;
             for (int i = 0; i < 10000; i++) {
-            if (Matches(Key(i + 1000000000, buffer))) {
+            if (Matches(uint64ToString(i + 1000000000))) {
                 result++;
             }
             }
@@ -98,29 +98,28 @@ TEST(SurfTest, EmptyFilter) {
     ASSERT_TRUE(true);
 }
 
-TEST(SurfTest, Small) {
-  Add("hello");
-  Add("beo");    
-  Add("azz");    
-  Add("world");
-    Add("hllo");    
-  Add("wod");
-//   uint64_t i = 252;
-//   Add(uint64ToString(i));
-//   uint64_t j = 250;
-//   Add(uint64ToString(j));
+// TEST(SurfTest, Small) {
+  
+//   Add("beo");    
+//   Add("azz");    
+//   Add("world");
+//     Add("hllo");    
+//   Add("wod");
+// //   uint64_t i = 252;
+// //   Add(uint64ToString(i));
+// //   uint64_t j = 250;
+// //   Add(uint64ToString(j));
 
-  ASSERT_TRUE(Matches("hello"));
-  ASSERT_TRUE(Matches("world"));
-    ASSERT_TRUE(Matches("beo"));
-  ASSERT_TRUE(Matches("azz"));
-    ASSERT_TRUE(Matches("hllo"));
-  ASSERT_TRUE(Matches("wod"));
-//   ASSERT_TRUE(Matches(uint64ToString(i)));
-//   ASSERT_TRUE(Matches(uint64ToString(j)));
-  ASSERT_TRUE(! Matches("x"));
-  ASSERT_TRUE(! Matches("foo"));
-}
+//   ASSERT_TRUE(Matches("world"));
+//     ASSERT_TRUE(Matches("beo"));
+//   ASSERT_TRUE(Matches("azz"));
+//     ASSERT_TRUE(Matches("hllo"));
+//   ASSERT_TRUE(Matches("wod"));
+// //   ASSERT_TRUE(Matches(uint64ToString(i)));
+// //   ASSERT_TRUE(Matches(uint64ToString(j)));
+//   ASSERT_TRUE(! Matches("x"));
+//   ASSERT_TRUE(! Matches("foo"));
+// }
 
 static int NextLength(int length) {
   if (length < 10) {
@@ -145,7 +144,7 @@ TEST(SurfTest, VaryingLengths) {
   for (int length = 1; length <= 10000; length = NextLength(length)) {
     Reset();
     for (int i = 0; i < length; i++) {
-      Add(Key(i, buffer));
+      Add(uint64ToString(i));
     }
     Build();
 
@@ -155,7 +154,7 @@ TEST(SurfTest, VaryingLengths) {
     // All added keys must match
     for (int i = 0; i < length; i++) {
         // printf("the select value = %d\n", i);
-      ASSERT_TRUE(Matches(Key(i, buffer)))
+      ASSERT_TRUE(Matches(uint64ToString(i)))
           << "Length " << length << "; key " << i;
     }
 

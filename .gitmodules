@@ -1,3 +1,6 @@
 [submodule "third-party/SuRF"]
 	path = third-party/SuRF
 	url = https://github.com/sunwell1994/SuRF.git
+[submodule "YCSB"]
+	path = YCSB
+	url = https://github.com/JianweiCxyz/YCSB

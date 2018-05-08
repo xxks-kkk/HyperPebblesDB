@@ -3054,6 +3054,7 @@ namespace leveldb {
       GetRange(all, smallest, largest);
     }
 
+
     Iterator *VersionSet::MakeInputIteratorForGuardsInALevel(Compaction *c) {
       ReadOptions options;
       options.verify_checksums = options_->paranoid_checks;
