@@ -356,11 +356,13 @@ DBImpl::PrintTimerAudit()
     printf("%s\n", timer->DebugString().c_str());
     printf("-------------------------------------------------------------------\n");
 
+#ifdef SEEK_PARALLEL
     versions_->PrintSeekThreadsTimerAuditIndividual();
     versions_->PrintSeekThreadsTimerAuditCumulative();
 
     versions_->PrintSeekThreadsStaticTimerAuditIndividual();
     versions_->PrintSeekThreadsStaticTimerAuditCumulative();
+#endif
 }
 
 Status
@@ -1371,10 +1373,8 @@ DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_fi
             // We spawn multple threads (one thread per group) to do the guard-based parallel compaction
             for (int i = 0; i < guardList.size(); ++i)
             {
-                auto
-                    tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuards, new CompactionThreadInput{
-                    this, guardList[i], compactionList[i], nullptr
-                });
+                auto *cti = new CompactionThreadInput{this, guardList[i], compactionList[i], nullptr};
+                auto tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuardsWrapper, cti);
                 threadList.push_back(tid);
             }
             for (int i = 0; i < threadList.size(); ++i)
