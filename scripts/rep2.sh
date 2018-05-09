@@ -12,21 +12,27 @@ WORKLOADS=${1:-0}       # which workload to run
 case $WORKLOADS in
     0)
         benchmarks_args=fillseq,readseq,seekrandom,deleteseq,stats,emptyGuards
+        #benchmarks_args=fillseq,readseq,deleteseq,stats,emptyGuards        
         ;;
     1)
         benchmarks_args=fillseq,readrandom,seekrandom,deleteseq,stats,emptyGuards
+        #benchmarks_args=fillseq,readrandom,deleteseq,stats,emptyGuards        
         ;;
     2)
         benchmarks_args=fillseq,readreverse,seekrandom,deleteseq,stats,emptyGuards
+        #benchmarks_args=fillseq,readreverse,deleteseq,stats,emptyGuards        
         ;;
     3)
         benchmarks_args=fillseq,readmissing,seekrandom,deleteseq,stats,emptyGuards
+        #benchmarks_args=fillseq,readmissing,deleteseq,stats,emptyGuards        
         ;;
     4)
         benchmarks_args=fillseq,readhot,seekrandom,deleteseq,stats,emptyGuards
+        #benchmarks_args=fillseq,readhot,deleteseq,stats,emptyGuards        
         ;;
     5)
         benchmarks_args=fillrandom,readseq,readrandom,readreverse,readmissing,readhot,seekrandom,stats,emptyGuards
+        #benchmarks_args=fillrandom,readseq,readrandom,readreverse,readmissing,readhot,stats,emptyGuards        
         ;;
     *)
         ;;
