@@ -2,7 +2,7 @@
 
 # Try to replicate the experiement "Impact of Empty Guards" in PebblesDB paper
 max_iter=0              # num of iterations to run
-i=0         
+i=19         
 num=1000000             # num rows to insert
 value_size=512          # row size (byte)
 reads=$(( $num / 2 ))   # num reads
