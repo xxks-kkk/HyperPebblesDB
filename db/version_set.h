@@ -1045,6 +1045,7 @@ namespace leveldb {
         void ReleaseInputs();
 
         std::string DebugString();
+        std::string SummaryString();
 
         bool is_horizontal_compaction;
         
