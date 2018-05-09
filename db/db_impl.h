@@ -234,7 +234,16 @@ private:
         FileLevelFilterBuilder* fileLevelFilterBuilder;
     };
 
+    // We use DoCompactionWorkerBasedOnGuardsWrapper mainly because the pthread requires the function to be static type
+    // However, timer object requires the function to be non-static type (i.e. part of the class object and thus can
+    // access timer object). To resolve this conflict, we use wrapper function. In addition, since pthread_create
+    // can only accept one void* argument, we need to cast the args we have appropriately in the wrapper function.
     static void
+    DoCompactionWorkerBasedOnGuardsWrapper(void* args) {
+        reinterpret_cast<CompactionThreadInput *>(args)->db->DoCompactionWorkerBasedOnGuards(args);
+    }
+
+    void
     DoCompactionWorkerBasedOnGuards(void* args);
 
     Status
@@ -242,6 +251,7 @@ private:
                            std::vector<GuardMetaData *> complete_guards_used_in_bg_compaction,
                            FileLevelFilterBuilder *file_level_filter_builder)
     EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
     Status
     OpenCompactionOutputFile(CompactionState *compact);
     Status

@@ -119,6 +119,9 @@ AC_CONFIG_FILES([Makefile libpebblesdb.pc])
 # Use it when you run db_bench
 AC_DEFINE([NDEBUG], [1], ['Disable debug'])
 
+AC_DEFINE([TIMER_LOG], [1], ['Start timer log'])
+
+
 # AC_CANONICAL_HOST is needed to access the 'host_os' variable   
 # https://stackoverflow.com/questions/38898591/how-to-check-the-os-with-automake 
 AC_CANONICAL_HOST
