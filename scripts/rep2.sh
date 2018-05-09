@@ -1,8 +1,8 @@
 #!/bin/sh -vx
 
 # Try to replicate the experiement "Impact of Empty Guards" in PebblesDB paper
-max_iter=0              # num of iterations to run
-i=19         
+max_iter=19              # num of iterations to run
+i=0         
 num=1000000             # num rows to insert
 value_size=512          # row size (byte)
 reads=$(( $num / 2 ))   # num reads
@@ -40,6 +40,8 @@ esac
 
 db_path=./pebblesdbtest-1000
 mkdir -p $db_path
+
+echo "<Experiment $WORKLOADS>"
 
 # We insert 20M key-value pairs (with keys from 0 to 20M, value size: 512B, dataset size: 10 GB), perform 10M read operations on the data, and delete all keys.
 ./$db_bench --benchmarks=$benchmarks_args --num=$num --value_size=$value_size --reads=$reads --base_key=0 --db=$db_path
