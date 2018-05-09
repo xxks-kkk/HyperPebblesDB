@@ -8,9 +8,13 @@ language: cpp
 
 compiler:
   - gcc
+
 os:
   - linux
   - osx
+
+git:
+  submodules: false
 
 addons:
   apt:
@@ -24,6 +28,18 @@ addons:
     - g++-5
     - libsnappy-dev
     - libtool
+
+# Use sed to replace the SSH URL with the public URL, then initialize submodules
+before_install:
+    - git submodule update --init
+    - cd third-party/SuRF
+    - if [ "$(uname)" == "Darwin" ]; then
+         sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules;
+      elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+         sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules;
+      fi
+    - git submodule update --init --recursive
+    - cd ../../
 
 install:
 
@@ -49,3 +65,5 @@ script:
 - make
 - make db_test
 - ./db_test
+- make surf_test
+- ./surf_test

@@ -78,3 +78,4 @@ gdb.txt
 .project
 .settings/
 nbproject/
+CMakeFiles
