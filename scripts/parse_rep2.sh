@@ -2,27 +2,31 @@
 # - rep2.sh
 # - rep2_driver.sh
 #
-# $1 - which data: fillseq, fillrandom, readseq, readrandom, readreverse, readmissing, readhot, empty,
+# $1 - which data: fillseq, fillrandom, readseq, readrandom, readreverse,
+#                  readmissing, readhot, empty (empty guards fraction),
+#                  guards (number of guards), eguards (number of empty guards)
 # $2 - location of typescript
 #
 # Assumption:
 # - experiment number is corresponding with the benchmark workload number in rep2.sh
-# - We only want micro/s number
-echo $1
+# - We only want micros/op number
+echo $1 "(micros/op)" 
 if [ "$1" = "fillseq" ]; then
     printf "exp 0\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 1 && FNR <= 20'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 1 && FNR <= 20'
     printf "exp 1\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 21 && FNR <= 40'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 21 && FNR <= 40'
     printf "exp 2\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 41 && FNR <= 60'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 41 && FNR <= 60'
     printf "exp 3\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 61 && FNR <= 80'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 61 && FNR <= 80'
     printf "exp 4\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 81 && FNR <= 100'    
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 81 && FNR <= 100'
+    printf "exp 6\n"
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 101 && FNR <= 120'    
 elif [ "$1" = "fillrandom" ]; then
     printf "exp 5\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//'
 elif [ "$1" = "readseq" ] \
         || [ "$1" = "readrandom" ] \
         || [ "$1" = "readreverse" ] \
@@ -31,7 +35,9 @@ elif [ "$1" = "readseq" ] \
     printf "exp 1\n"
     grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 1 && FNR <= 20'
     printf "exp 5\n"
-    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*//' | awk 'FNR >= 21 && FNR <= 40'
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 21 && FNR <= 40'
+    printf "exp 6\n"
+    grep ^$1 $2 | awk '{ print $2}' | sed 's/:*0*o*//' | awk 'FNR >= 41 && FNR <= 60'    
 elif [ "$1" = "empty" ]; then
     # we show empty guards fraction
     grep ^$1 $2 | awk '
@@ -48,6 +54,38 @@ elif [ "$1" = "empty" ]; then
           print $4
         }
         '
+elif [ "$1" = "guards" ]; then
+    # we show number of guards
+    printf "exp 0\n"    
+    grep ^'number of guards' $2 | awk '{print $4}' | sed -n '1,20 p'
+    printf "exp 1\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '21,40 p'
+    printf "exp 2\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '41,60 p'
+    printf "exp 3\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '61,80 p'
+    printf "exp 4\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '81,100 p'
+    printf "exp 5\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '101,120 p'
+    printf "exp 6\n"    
+    grep ^'number of guards' $2  | awk '{print $4}' | sed -n '121,140 p'
+elif [ "$1" = "eguards" ]; then
+    # we show number of empty guards
+    printf "exp 0\n"    
+    grep ^'number of empty guards' $2 | awk '{print $5}' | sed -n '1,20 p'
+    printf "exp 1\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '21,40 p'
+    printf "exp 2\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '41,60 p'
+    printf "exp 3\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '61,80 p'
+    printf "exp 4\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '81,100 p'
+    printf "exp 5\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '101,120 p'
+    printf "exp 6\n"    
+    grep ^'number of empty guards' $2  | awk '{print $5}' | sed -n '121,140 p'        
 fi
        
     

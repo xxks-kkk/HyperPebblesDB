@@ -877,7 +877,7 @@ namespace leveldb {
 		      fresh_db = true;
               method = &Benchmark::YCSB;
             } else if (name == Slice("fillseq")) {
-              //fresh_db = true;
+//              fresh_db = true;
               method = &Benchmark::WriteSeq;
             } else if (name == Slice("fillbatch")) {
               fresh_db = true;
@@ -892,7 +892,7 @@ namespace leveldb {
 //        entries_per_batch_ = 1000;
               method = &Benchmark::ReliabilityCheck;
             } else if (name == Slice("fillrandom")) {
-              fresh_db = true;
+//              fresh_db = true;
               method = &Benchmark::WriteRandom;
             } else if (name == Slice("reopen")) {
               fresh_db = false;
