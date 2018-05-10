@@ -34,6 +34,10 @@ case $WORKLOADS in
         benchmarks_args=fillrandom,readseq,readrandom,readreverse,readmissing,readhot,seekrandom,stats,emptyGuards
         #benchmarks_args=fillrandom,readseq,readrandom,readreverse,readmissing,readhot,stats,emptyGuards        
         ;;
+    6)
+        benchmarks_args=fillseq,readseq,readrandom,readreverse,readmissing,readhot,seekrandom,stats,emptyGuards
+        #benchmarks_args=fillseq,readseq,readrandom,readreverse,readmissing,readhot,stats,emptyGuards        
+        ;;    
     *)
         ;;
 esac
