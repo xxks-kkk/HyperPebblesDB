@@ -1580,6 +1580,14 @@ namespace leveldb {
         num_guards += guards_per_level;
         num_empty_guards += empty_guards_per_level;
       }
+      r.append("number of guards: ");
+      AppendNumberTo(&r, num_guards);
+      r.append("\n");
+
+      r.append("number of empty guards: ");
+      AppendNumberTo(&r, num_empty_guards);
+      r.append("\n");
+
       r.append("empty guard fraction: ");
       AppendDoubleTo(&r, (double_t) num_empty_guards / num_guards);
       r.append("\n");
