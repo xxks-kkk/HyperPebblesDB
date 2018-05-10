@@ -356,11 +356,13 @@ DBImpl::PrintTimerAudit()
     printf("%s\n", timer->DebugString().c_str());
     printf("-------------------------------------------------------------------\n");
 
+#ifdef SEEK_PARALLEL
     versions_->PrintSeekThreadsTimerAuditIndividual();
     versions_->PrintSeekThreadsTimerAuditCumulative();
 
     versions_->PrintSeekThreadsStaticTimerAuditIndividual();
     versions_->PrintSeekThreadsStaticTimerAuditCumulative();
+#endif
 }
 
 Status
@@ -1249,7 +1251,7 @@ DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_fi
 #ifndef __APPLE__
     int owner = mutex_.owner();
     Log(options_.info_log,
-        "[%d]Starting BackgroundCompactioParallel...", owner);
+        "[%d]Starting BackgroundCompactionParallel...", owner);
 #endif
     bool force_compact;
     Compaction *c = NULL;
@@ -1343,6 +1345,7 @@ DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_fi
 #ifndef __APPLE__
 			Log(options_.info_log,
 			    "[%d]Spawning %lu threads...", owner, guardList.size());
+            auto starttime = env_->NowMicros();
 #endif
         if (guardList.size() > 1)
         {
@@ -1371,16 +1374,12 @@ DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_fi
             // We spawn multple threads (one thread per group) to do the guard-based parallel compaction
             for (int i = 0; i < guardList.size(); ++i)
             {
-                auto
-                    tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuards, new CompactionThreadInput{
-                    this, guardList[i], compactionList[i], nullptr
-                });
+                auto *cti = new CompactionThreadInput{this, guardList[i], compactionList[i], nullptr};
+                auto tid = env_->StartThreadAndReturnThreadId(DoCompactionWorkerBasedOnGuardsWrapper, cti);
                 threadList.push_back(tid);
             }
             for (int i = 0; i < threadList.size(); ++i)
-            {
                 env_->WaitForThread((unsigned long)threadList[i], nullptr);
-            }
             mutex_.Lock();
         }
         else
@@ -1396,8 +1395,11 @@ DBImpl::BackgroundCompactionGuardsParallel(FileLevelFilterBuilder *file_level_fi
             CleanupCompaction(compact);
         }
 #ifndef __APPLE__
+        auto endtime = env_->NowMicros(); 
         Log(options_.info_log,
-            "[%d]%lu threads finished.", owner, guardList.size());
+                   "[%d]%s", owner, c->SummaryString().c_str());
+        Log(options_.info_log,
+            "[%d]%lu threads finished in %lu microseconds.", owner, guardList.size(), endtime - starttime);
 #endif
         start_timer(BGC_CLEANUP_COMPACTION);
         c->ReleaseInputs();
@@ -1539,18 +1541,18 @@ DBImpl::BackgroundCompactionGuards(FileLevelFilterBuilder *file_level_filter_bui
         start_timer(BGC_ADD_GUARDS_TO_EDIT);
         versions_->current()->AddGuardsToEdit(c->edit(), level_to_load_from_complete_guards);
         record_timer(BGC_ADD_GUARDS_TO_EDIT);
-#ifndef __APPLE__
-        Log(options_.info_log,
-            "[%d] NumOfGuardsAtLevel[%d]=%lu NumOfCompleteGuards=%lu",
-            owner,
-            c->level(),
-            c->guard_inputs_[0].size(),
-            complete_guards_used_in_bg_compaction.size());
-#endif
+        auto starttime = env_->NowMicros(); 
         CompactionState *compact = new CompactionState(c);
         start_timer(BGC_DO_COMPACTION_WORK_GUARDS);
         status = DoCompactionWorkGuards(compact, complete_guards_used_in_bg_compaction, file_level_filter_builder);
         record_timer(BGC_DO_COMPACTION_WORK_GUARDS);
+#ifndef __APPLE__
+        auto endtime = env_->NowMicros(); 
+        Log(options_.info_log,
+                   "[%d]%s", owner, c->SummaryString().c_str());
+        Log(options_.info_log,
+            "[%d]%lu threads finished in %lu microseconds.", owner, c->guard_inputs_[0].size(), endtime - starttime);
+#endif
 
         if (!status.ok())
         {
