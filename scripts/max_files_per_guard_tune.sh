@@ -67,11 +67,21 @@ do
     try=$(( $try + 1 ))    
     echo "<PARALLEL>"
     echo "[max=$try]"
-    sed -i "s/static const unsigned kMaxFilesPerGuardSentinel = $(( $try + 1 ));/static const unsigned kMaxFilesPerGuardSentinel = $try;/" db/dbformat.h
+    if [ $try = 1 ]; then
+	sed -i "s/static const unsigned kMaxFilesPerGuardSentinel = $(( $try + 1 ));/static const unsigned kMaxFilesPerGuardSentinel = $try;/" ../db/dbformat.h
+    elif [ $try = 2 ]; then
+	echo ""
+    else
+	sed -i "s/static const unsigned kMaxFilesPerGuardSentinel = $(( try - 1));/static const unsigned kMaxFilesPerGuardSentinel = $try;/" ../db/dbformat.h
+    fi
+    exit
     build
     repeat
     sed -i 's/parallel_guard_compaction(true)/parallel_guard_compaction(false)/' ../util/options.cc
     echo "<NO_PARALLEL>"
     repeat
     sed -i 's/parallel_guard_compaction(false)/parallel_guard_compaction(true)/' ../util/options.cc
+    if [ $try = 1 ]; then
+	sed -i "s/static const unsigned kMaxFilesPerGuardSentinel = 1;/static const unsigned kMaxFilesPerGuardSentinel = 2;/" ../db/dbformat.h
+    fi
 done
