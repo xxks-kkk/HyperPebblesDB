@@ -1,8 +1,8 @@
 #!/bin/bash -vx
 
-max_iter=5              # num of iterations to run
+max_iter=3              # num of iterations to run
 i=0         
-num=100000             # num rows to insert
+num=10000000            # num rows to insert
 value_size=512          # row size (byte)
 reads=$(( $num / 2 ))   # num reads
 db_bench=../db_bench    # path to db_bench executable
@@ -10,10 +10,10 @@ db_bench=../db_bench    # path to db_bench executable
 WORKLOADS=${1:-0}       # which workload to run
 case $WORKLOADS in
     0)
-        benchmarks_args=fillseq,readseq,deleteseq,stats,emptyGuards,sstables
+        benchmarks_args=fillseq,readseq,deleteseq,stats,emptyGuards
         ;;
     1)
-        benchmarks_args=fillseq,readrandom,deleteseq,stats,emptyGuards,sstables
+        benchmarks_args=fillseq,readrandom,deleteseq,stats,emptyGuards
         ;;
     2)
         benchmarks_args=fillseq,readreverse,deleteseq,stats,emptyGuards        
@@ -74,7 +74,6 @@ do
     else
 	sed -i "s/static const unsigned kMaxFilesPerGuardSentinel = $(( try - 1));/static const unsigned kMaxFilesPerGuardSentinel = $try;/" ../db/dbformat.h
     fi
-    exit
     build
     repeat
     sed -i 's/parallel_guard_compaction(true)/parallel_guard_compaction(false)/' ../util/options.cc
