@@ -543,7 +543,7 @@ public:
         : cache_(FLAGS_cache_size >= 0 ? NewLRUCache(FLAGS_cache_size) : NULL),
           filter_policy_(FLAGS_bloom_bits >= 0
                          ? NewBloomFilterPolicy(FLAGS_bloom_bits)
-                         : NewSuRFPolicy(1, 7, 0, true, 16, false)),
+                         : NewSuRFPolicy(1, -FLAGS_bloom_bits, 0, true, 16, false)),
           db_(NULL),
           num_(FLAGS_num),
           value_size_(FLAGS_value_size),
