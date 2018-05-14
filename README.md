@@ -12,7 +12,12 @@ HyperPebblesDB is part of [LevelDB](https://github.com/google/leveldb) family, a
 
 - Continuous code integration using Travis-CI
 - New `emptyGuards` option in `db_bench` that gives detailed SSTables distribution under each guard across all levels
-- `db_bench` enables "fillseq" even when using existing database
+- `db_bench` enables "fillseq" and "fillrandom" even when using existing database
+- `db_bench` support "ycsb" option by reading a trace file generated from the YCSB benchmark (check "scripts/trace_gen.sh" for details)
+- Support guard-based parallel compaction, which can be turn on/off with `options.parallel_guard_compaction`
+- Support Succinct Range Filter (SuRF) as an alternative to bloom filter. Check [SuRF paper](http://www.cs.cmu.edu/~huanche1/publications/surf_paper.pdf) for details
+- Better internal documentation
+- Verified portability on both Mac & Linux using g++-5
 
 ### Dependencies
 
@@ -25,12 +30,14 @@ HyperPebblesDB was built, compiled, and tested with g++-4.7, g++-4.9, and g++-5.
 
 ### Installation
 
-`$ cd HyperPebblesDB/`  
-`$ autoreconf -i`  
-`$ ./configure`  
-`$ make`  
-`# make install`  
-`# ldconfig`  
+```
+$ cd HyperPebblesDB/ 
+$ autoreconf -i  
+$ ./configure
+$ make 
+$ make install  
+$ldconfig
+```
 
 ### Caveat
 
