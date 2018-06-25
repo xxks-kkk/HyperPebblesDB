@@ -21,6 +21,9 @@ check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
 
 # Make 'libpebblesdb' static library
 add_library(libpebblesdb STATIC
+        port/port_posix.cc
+        port/port_posix.h
+        port/port_stdcxx.h
         port/port.h
         db/builder.cc
         db/c.cc
@@ -61,8 +64,10 @@ add_library(libpebblesdb STATIC
         util/histogram.cc
         util/logging.cc
         util/options.cc
-        util/status.cc
-        port/port_posix.cc)
+        util/status.cc)
+
+include(TestBigEndian)
+test_big_endian(LEVELDB_IS_BIG_ENDIAN)
 
 # Check the existance of snappy
 if(HAVE_SNAPPY)
