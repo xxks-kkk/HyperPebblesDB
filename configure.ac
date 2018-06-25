@@ -114,4 +114,42 @@ AC_SUBST(SNAPPY_FLAGS)
 AC_SUBST(SNAPPY_LIBS)
 
 AC_CONFIG_FILES([Makefile libpebblesdb.pc])
+
+# Disable Debug by define NDEBUG preprocessor
+# Use it when you run db_bench
+AC_DEFINE([NDEBUG], [1], ['Disable debug'])
+
+AC_DEFINE([TIMER_LOG], [1], ['Start timer log'])
+
+
+# AC_CANONICAL_HOST is needed to access the 'host_os' variable   
+# https://stackoverflow.com/questions/38898591/how-to-check-the-os-with-automake 
+AC_CANONICAL_HOST
+
+build_linux=no
+build_windows=no
+build_mac=no
+
+# Detect the target system
+case "${host_os}" in
+    linux*)
+        build_linux=yes
+        ;;
+    cygwin*|mingw*)
+        build_windows=yes
+        ;;
+    darwin*)
+        build_mac=yes
+        AC_DEFINE([__APPLE__], [1], ['Disable Mac-incompatible trace function'])
+        ;;
+    *)
+        AC_MSG_ERROR(["OS $host_os is not supported"])
+        ;;
+esac
+
+# Pass the conditionals to automake
+AM_CONDITIONAL([LINUX], [test "$build_linux" = "yes"])
+AM_CONDITIONAL([WINDOWS], [test "$build_windows" = "yes"])
+AM_CONDITIONAL([OSX], [test "$build_mac" = "yes"])
+
 AC_OUTPUT

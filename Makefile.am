@@ -26,7 +26,7 @@
 ## POSSIBILITY OF SUCH DAMAGE.
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
-AM_CPPFLAGS = -I${abs_top_srcdir}/include
+AM_CPPFLAGS = -I${abs_top_srcdir}/include 
 AM_CFLAGS = -DLEVELDB_PLATFORM_POSIX $(SNAPPY_FLAGS) ${EXTRA_CFLAGS} $(WANAL_CFLAGS)
 AM_CXXFLAGS = -DLEVELDB_PLATFORM_POSIX $(SNAPPY_FLAGS) ${EXTRA_CFLAGS} $(WANAL_CXXFLAGS) -Wno-variadic-macros -std=c++11
 AM_MAKEFLAGS = --no-print-directory
@@ -65,6 +65,7 @@ pkginclude_HEADERS += include/pebblesdb/status.h
 pkginclude_HEADERS += include/pebblesdb/table_builder.h
 pkginclude_HEADERS += include/pebblesdb/table.h
 pkginclude_HEADERS += include/pebblesdb/write_batch.h
+pkginclude_HEADERS += third-party/SuRF/include/surf.hpp
 noinst_HEADERS =
 noinst_HEADERS += db/builder.h
 noinst_HEADERS += db/dbformat.h
@@ -142,6 +143,7 @@ libpebblesdb_la_SOURCES += table/two_level_iterator.cc
 libpebblesdb_la_SOURCES += util/arena.cc
 libpebblesdb_la_SOURCES += util/atomic.cc
 libpebblesdb_la_SOURCES += util/bloom.cc
+libpebblesdb_la_SOURCES += util/surf.cc
 libpebblesdb_la_SOURCES += util/cache.cc
 libpebblesdb_la_SOURCES += util/coding.cc
 libpebblesdb_la_SOURCES += util/comparator.cc
@@ -176,6 +178,7 @@ check_PROGRAMS =
 check_PROGRAMS += autocompact_test
 check_PROGRAMS += arena_test
 check_PROGRAMS += bloom_test
+check_PROGRAMS += surf_test
 check_PROGRAMS += c_test
 check_PROGRAMS += cache_test
 check_PROGRAMS += coding_test
@@ -228,6 +231,9 @@ arena_test_LDADD = libpebblesdb.la -lpthread
 
 bloom_test_SOURCES = util/bloom_test.cc $(TESTHARNESS)
 bloom_test_LDADD = libpebblesdb.la -lpthread
+
+surf_test_SOURCES = util/surf_test.cc $(TESTHARNESS)
+surf_test_LDADD = libpebblesdb.la -lpthread
 
 c_test_SOURCES = db/c_test.c $(TESTHARNESS)
 c_test_LDADD = libpebblesdb.la -lpthread
@@ -285,3 +291,4 @@ issue200_test_LDADD = libpebblesdb.la -lpthread
 
 testPebblesDB_SOURCES = learning/testPebblesDB.cc
 testPebblesDB_LDADD = libpebblesdb.la -lpthread
+

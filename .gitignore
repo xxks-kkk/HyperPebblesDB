@@ -69,5 +69,13 @@
 /stamp-h1
 
 .idea/
+.vscode/
 cmake-build-debug/
 testPebblesDB
+gdb.txt
+.autotools
+.cproject
+.project
+.settings/
+nbproject/
+CMakeFiles
