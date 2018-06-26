@@ -29,14 +29,32 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.62])
+
+# mandatory initialization step
+# https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Initializing-configure.html
 AC_INIT([pebblesdb], [1.0.dev], [vijay@cs.utexas.edu])
+
+# m4: https://en.wikipedia.org/wiki/M4_(computer_language)
+# https://www.gnu.org/software/m4/manual/m4.html
+# this macro expands to the result of running command in a shell
 m4_define([serial_tests], [
     m4_esyscmd([case `automake --version | head -n 1` in
                 *1.11*);;
                 *) echo serial-tests;;
                 esac])
 ])
+
+# `AM_INIT_AUTOMAKE`: Runs many macros required for proper operation of the generated Makefiles.
+# Option list: https://www.gnu.org/software/automake/manual/html_node/List-of-Automake-options.html#List-of-Automake-options
+# - The `foreign` option tells Automake that this package will not follow the GNU Standards
+# - The `serial-tests`: Enable the older serial test suite harness for TESTS
+# - The `subdir-objects`: objects are placed into the subdirectory of the
+#   build directory corresponding to the subdirectory of the source file.
+#   For instance, if the source file is subdir/file.cxx, then the output file would be subdir/file.o.
+# - The `dist-bzip2`: Hook dist-bzip2 to dist. `dist` is related to package distribution.
 AM_INIT_AUTOMAKE(foreign serial_tests subdir-objects dist-bzip2)
+
+
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 LT_PREREQ([2.2])
 LT_INIT
