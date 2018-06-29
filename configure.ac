@@ -115,26 +115,44 @@ EXTRA_CFLAGS=""
 # check whether `-fno-builtin-memcmp` works with the current compiler, if so
 # we add `EXTRA_CFLAGS="-fno-builtin-memcmp"` as extra flags to the compiler
 AX_CHECK_COMPILE_FLAG([-fno-builtin-memcmp],[EXTRA_CFLAGS="-fno-builtin-memcmp"],,)
-
-
 AX_CHECK_COMPILE_FLAG([-fno-builtin-memmove],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-builtin-memcmp"],,)
 AX_CHECK_COMPILE_FLAG([-Qunused-arguments],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -Qunused-arguments"],,)
-#AX_CHECK_COMPILE_FLAG([-Wno-unknown-warning-option],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -Wno-unknown-warning-option"],,)
+
+# AC_SUBST: write a variable into the Makefile. In this case, Makefile will have
+# variable `EXTRA_CFLAGS` with value `${EXTRA_CFLAGS}`.
+# https://renenyffenegger.ch/notes/development/GNU/toolchain/Build-System/Autoconf/macros/AC_SUBST
 AC_SUBST([EXTRA_CFLAGS], [${EXTRA_CFLAGS}])
 
 # Checks for libraries.
 
 # Checks for header files.
+# AC_CHECK_HEADERS: check the existence of header files. Usually, we want to use some C/C++ library
+# in the program. It is necessary to check the existence of those library header files.
+# https://autotools.io/autoconf/finding.html
 AC_CHECK_HEADERS([endian.h machine/endian.h sys/endian.h sys/isa_defs.h sys/types.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
+# AC_FUNC_ERROR_AT_LINE: check the existence of function `error_at_line`
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.60/html_node/Particular-Functions.html
+# https://linux.die.net/man/3/error_at_line
 AC_FUNC_ERROR_AT_LINE
+
+# AC_FUNC_MMAP: If the `mmap` function exists and works correctly, define HAVE_MMAP. 
+# This checks only private fixed mapping of already-mapped memory.
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.60/html_node/Particular-Functions.html
 AC_FUNC_MMAP
+
+# AC_CHECK_FUNCS: check the existence of functions. If exits, define HAVE_function (e.g. HAVE_ALARM)
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/Generic-Functions.html
 AC_CHECK_FUNCS([alarm clock_gettime mach_absolute_time ftruncate fsync])
 AC_CHECK_FUNCS([fread fread_unlocked fwrite fwrite_unlocked fflush])
 AC_CHECK_FUNCS([fflush_unlocked memmove mkdir munmap rmdir socket])
+
+# AC_CHECK_DECLS: check the existence of symbols. If exists, 
+# define HAVE_DECL_symbol (in all capitals) to 1 if symbol is declared, otherwise to 0.
+# ftp://ftp.gnu.org/old-gnu/Manuals/autoconf-2.53/html_node/Generic-Declarations.html
 AC_CHECK_DECLS([fdatasync])
 
 # Optional components
