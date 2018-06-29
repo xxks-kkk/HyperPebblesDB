@@ -54,23 +54,69 @@ m4_define([serial_tests], [
 # - The `dist-bzip2`: Hook dist-bzip2 to dist. `dist` is related to package distribution.
 AM_INIT_AUTOMAKE(foreign serial_tests subdir-objects dist-bzip2)
 
-
+# `m4_ifdef` check the existence of a macro (e.g. AM_SILENT_RULES):
+# syntax: m4_ifdef([macro], [if-defined], [if-not-defined])
+# AM_SILENT_RULES: silent rules <- make the `make` process less verbose
+# https://autotools.io/automake/silent.html
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+# Specify the Libtool version
+# https://www.gnu.org/software/libtool/manual/html_node/LT_005fINIT.html
 LT_PREREQ([2.2])
+
+# initialize Libtool, which a wrapper that wrapps around different
+# shared library format with standard extension: libfoo.la. Libtool
+# will take care of translating and linking the shared libraries specific
+# to the target platform
+# https://www.lrde.epita.fr/~adl/dl/autotools.pdf (slide 115 -)
 LT_INIT
+
+# AC_CONFIG_SRCDIR: sanity check that the specified file actually exists
+# Usually, people put to be distributed source file here. In this case,
+# we include `db.h` so that user can use db itself in their program
+# - https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Input.html
+# - https://renenyffenegger.ch/notes/development/GNU/toolchain/Build-System/Autoconf/macros/AC_CONFIG_SRCDIR
+# - http://freesoftwaremagazine.com/articles/configuring_a_project_with_autoconf/
+# - https://eklitzke.org/how-to-autotools
 AC_CONFIG_SRCDIR([include/pebblesdb/db.h])
+
+# AC_CONFIG_HEADERS: automatically generate the head file: config.h from
+# config.h.in
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.66/html_node/Configuration-Headers.html
 AC_CONFIG_HEADERS([config.h])
+
+# AC_CONFIG_MACRO_DIR: decalre where additional macro files are to be put and found
+# https://autotools.io/autoconf/macros.html
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
+# AC_PROG_CXX: This is required if any C++ source is included
 AC_PROG_CXX
+
+# AC_PROG_CC: causes the configure script to search for a C compiler and define the variable `CC` with its name
+# https://www.gnu.org/software/automake/manual/html_node/amhello_0027s-configure_002eac-Setup-Explained.html
 AC_PROG_CC
+
+# AC_LANG(C++): Do compilation tests using CXX and CXXCPP and use extension .C for test programs.
+# Use compilation flags: CPPFLAGS with CXXCPP, and both CPPFLAGS and CXXFLAGS with CXX.
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.63/html_node/Language-Choice.html
 AC_LANG(C++)
 
+# A macro defined inside `m4/anal_warnings.m4`, which
+# enables many compiler warnings for C++ that generally catch bugs in
+# code.
 ANAL_WARNINGS
 
+# EXTRA_CFLAGS: User can provide extra command line flags through this variable
+# https://stackoverflow.com/questions/27862627/what-is-the-purpose-of-extra-cflags
 EXTRA_CFLAGS=""
+
+# AX_CHECK_COMPILE_FLAG: A macro defined inside `m4/ax_check_compile_flag.m4`
+# check whether `-fno-builtin-memcmp` works with the current compiler, if so
+# we add `EXTRA_CFLAGS="-fno-builtin-memcmp"` as extra flags to the compiler
 AX_CHECK_COMPILE_FLAG([-fno-builtin-memcmp],[EXTRA_CFLAGS="-fno-builtin-memcmp"],,)
+
+
 AX_CHECK_COMPILE_FLAG([-fno-builtin-memmove],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-builtin-memcmp"],,)
 AX_CHECK_COMPILE_FLAG([-Qunused-arguments],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -Qunused-arguments"],,)
 #AX_CHECK_COMPILE_FLAG([-Wno-unknown-warning-option],[EXTRA_CFLAGS="${EXTRA_CFLAGS} -Wno-unknown-warning-option"],,)
