@@ -28,15 +28,19 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+# AC_PREREQ: Ensure that a recent enough version of Autoconf is being used.
 AC_PREREQ([2.62])
 
 # mandatory initialization step
 # https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Initializing-configure.html
+# syntax: AC_INIT (package, version, [bug-report], [tarname], [url])
 AC_INIT([pebblesdb], [1.0.dev], [vijay@cs.utexas.edu])
 
 # m4: https://en.wikipedia.org/wiki/M4_(computer_language)
 # https://www.gnu.org/software/m4/manual/m4.html
-# this macro expands to the result of running command in a shell
+# m4_define: define macro in m4 language
+# m4_esyscmd: this macro expands to the result of running command in a shell
+# https://www.gnu.org/software/autoconf/manual/autoconf-2.68/html_node/Redefined-M4-Macros.html
 m4_define([serial_tests], [
     m4_esyscmd([case `automake --version | head -n 1` in
                 *1.11*);;
