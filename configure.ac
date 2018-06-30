@@ -158,11 +158,31 @@ AC_CHECK_DECLS([fdatasync])
 # Optional components
 snappy_detect_hdr=yes
 snappy_detect_lib=yes
+
+# AC_CHECK_LIB: Test whether the library *library* is available by trying to
+# link a test program that calls function *function* with the library.
+# *function* should be a function provided by the library.
+# syntax: AC_CHECK_LIB (library, function, [action-if-found], [action-if-not-found], [other-libraries])
+# In this case, we check existence of library `snappy` by asking the test program call
+# the function `snappy_compress`. If the function exists, we set `snappy_detect_hdr=yes`
+# otherwise, we set `snappy_detect_hdr=no`.
+# https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Libraries.html
 AC_CHECK_LIB([snappy], [snappy_compress], [snappy_detect_hdr=yes], [snappy_detect_hdr=no])
+
+# syntax:  AC_CHECK_HEADERS (header-file..., [action-if-found], [action-if-not-found], [includes = `AC_INCLUDES_DEFAULT'])
+# In this case, if we cannot find `snappy.h`, we set `snappy_detect_lib=no`
 AC_CHECK_HEADER([snappy.h],,[snappy_detect_lib=no])
+
+# syntax: AC_ARG_ENABLE (feature, help-string, [action-if-given], [action-if-not-given])
+# If the user gave configure the option `--enable-feature` or `--disable-feature`,
+# run shell commands action-if-given. If neither option was given, run shell commands action-if-not-given.
 AC_ARG_ENABLE([snappy], [AS_HELP_STRING([--enable-snappy],
               [build with Snappy @<:@default: auto@:>@])],
               [snappy=${enableval}], [snappy=auto])
+
+# check the value of variable "snappy":
+# https://superuser.com/questions/935374/difference-between-and-in-shell-script
+# https://stackoverflow.com/questions/174119/why-do-shell-script-comparisons-often-use-xvar-xyes
 if test x"${snappy}" = xno; then
 snappy_detect_hdr=no
 snappy_detect_lib=no
@@ -192,17 +212,26 @@ else
 SNAPPY_FLAGS=
 SNAPPY_LIBS=
 fi
+
 AC_SUBST(SNAPPY_FLAGS)
 AC_SUBST(SNAPPY_LIBS)
 
+# AC_CONFIG_FILES: Make AC_OUTPUT create each file by copying an input file
+# (by default file.in), substituting the output variable values. In this case,
+# we create `Makefile` by copying `Makefile.in`, and `libpebblesdb.pc` by
+# `libpebblesdb.pc.in` and substitutes the output variable values inside .in files.
+# AC_OUTPUT: generates files that are required for building the packages
+# https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Configuration-Files.html
+# http://www.shlomifish.org/lecture/Autotools/slides/common_macros/AC_OUTPUT.html
 AC_CONFIG_FILES([Makefile libpebblesdb.pc])
 
 # Disable Debug by define NDEBUG preprocessor
 # Use it when you run db_bench
 AC_DEFINE([NDEBUG], [1], ['Disable debug'])
 
-AC_DEFINE([TIMER_LOG], [1], ['Start timer log'])
-
+# Enable TIMER_LOG when you want to have a detailed
+# statistics of operations inside micro-benchmark
+AC_DEFINE([TIMER_LOG], [0], ['Start timer log'])
 
 # AC_CANONICAL_HOST is needed to access the 'host_os' variable   
 # https://stackoverflow.com/questions/38898591/how-to-check-the-os-with-automake 
@@ -234,4 +263,5 @@ AM_CONDITIONAL([LINUX], [test "$build_linux" = "yes"])
 AM_CONDITIONAL([WINDOWS], [test "$build_windows" = "yes"])
 AM_CONDITIONAL([OSX], [test "$build_mac" = "yes"])
 
+# ftp://ftp.gnu.org/old-gnu/Manuals/autoconf-2.13/html_chapter/autoconf_3.html
 AC_OUTPUT
