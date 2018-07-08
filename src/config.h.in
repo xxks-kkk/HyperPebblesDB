@@ -45,7 +45,7 @@
 #cmakedefine01 HAVE_INTTYPES_H
 
 /* Define to 1 if you have the <machine/endian.h> header file. */
-#cmakedefine01 HAVE_MACHINE_ENDIAN_H
+#cmakedefine HAVE_MACHINE_ENDIAN_H
 
 /* Define to 1 if you have the `mach_absolute_time' function. */
 #cmakedefine01 HAVE_MACH_ABSOLUTE_TIME
