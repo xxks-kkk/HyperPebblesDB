@@ -13,153 +13,75 @@ include_directories(include)
 include_directories(include/pebblesdb)
 include_directories(issues)
 include_directories(port)
-include_directories(port/win)
 include_directories(table)
 include_directories(util)
 
-add_executable(pebblesdb
-        db/autocompact_test.cc
-        db/builder.cc
-        db/builder.h
-        db/c.cc
-        db/c_test.c
-        db/corruption_test.cc
-        db/db_bench.cc
-        db/db_impl.cc
-        db/db_impl.h
-        db/db_iter.cc
-        db/db_iter.h
-        db/db_test.cc
-        db/dbformat.cc
-        db/dbformat.h
-        db/dbformat_test.cc
-        db/filename.cc
-        db/filename.h
-        db/filename_test.cc
-        db/leveldb_main.cc
-        db/log_format.h
-        db/log_reader.cc
-        db/log_reader.h
-        db/log_test.cc
-        db/log_writer.cc
-        db/log_writer.h
-        db/memtable.cc
-        db/memtable.h
-        db/murmurhash3.cc
-        db/murmurhash3.h
-        db/repair.cc
-        db/replay_iterator.cc
-        db/replay_iterator.h
-        db/skiplist.h
-        db/skiplist_test.cc
-        db/snapshot.h
-        db/table_cache.cc
-        db/table_cache.h
-        db/version_edit.cc
-        db/version_edit.h
-        db/version_edit_test.cc
-        db/version_set.cc
-        db/version_set.h
-        db/version_set_test.cc
-        db/write_batch.cc
-        db/write_batch_internal.h
-        db/write_batch_test.cc
-        doc/bench/db_bench_sqlite3.cc
-        doc/bench/db_bench_tree_db.cc
-        helpers/memenv/memenv.cc
-        helpers/memenv/memenv.h
-        helpers/memenv/memenv_test.cc
-        include/pebblesdb/c.h
-        include/pebblesdb/cache.h
-        include/pebblesdb/comparator.h
-        include/pebblesdb/db.h
-        include/pebblesdb/env.h
-        include/pebblesdb/filter_policy.h
-        include/pebblesdb/iterator.h
-        include/pebblesdb/options.h
-        include/pebblesdb/replay_iterator.h
-        include/pebblesdb/slice.h
-        include/pebblesdb/status.h
-        include/pebblesdb/table.h
-        include/pebblesdb/table_builder.h
-        include/pebblesdb/write_batch.h
-        issues/issue178_test.cc
-        issues/issue200_test.cc
-        port/win/stdint.h
-        port/atomic_pointer.h
-        port/port.h
-        port/port_example.h
+include(CheckLibraryExists)
+check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
+
+# Make 'libpebblesdb' static library
+add_library(libpebblesdb STATIC
         port/port_posix.cc
         port/port_posix.h
-        port/thread_annotations.h
+        port/port_stdcxx.h
+        port/port.h
+        db/builder.cc
+        db/c.cc
+        db/dbformat.cc
+        db/db_impl.cc
+        db/db_iter.cc
+        db/filename.cc
+        db/log_reader.cc
+        db/log_writer.cc
+        db/memtable.cc
+        db/murmurhash3.cc
+        db/repair.cc
+        db/replay_iterator.cc
+        db/table_cache.cc
+        db/version_edit.cc
+        db/version_set.cc
+        db/write_batch.cc
         table/block.cc
-        table/block.h
         table/block_builder.cc
-        table/block_builder.h
         table/filter_block.cc
-        table/filter_block.h
-        table/filter_block_test.cc
         table/format.cc
-        table/format.h
         table/iterator.cc
-        table/iterator_wrapper.h
         table/merger.cc
-        table/merger.h
-        table/table.cc
         table/table_builder.cc
-        table/table_test.cc
+        table/table.cc
         table/two_level_iterator.cc
-        table/two_level_iterator.h
         util/arena.cc
-        util/arena.h
-        util/arena_test.cc
         util/atomic.cc
-        util/atomic.h
         util/bloom.cc
-        util/bloom_test.cc
         util/cache.cc
-        util/cache_test.cc
         util/coding.cc
-        util/coding.h
-        util/coding_test.cc
         util/comparator.cc
         util/crc32c.cc
-        util/crc32c.h
-        util/crc32c_test.cc
         util/env.cc
         util/env_posix.cc
-        util/env_test.cc
         util/filter_policy.cc
         util/hash.cc
-        util/hash.h
         util/histogram.cc
-        util/histogram.h
         util/logging.cc
-        util/logging.h
-        util/mutexlock.h
         util/options.cc
-        util/posix_logger.h
-        util/random.h
-        util/status.cc
-        util/string_builder.h
-        util/testharness.cc
-        util/testharness.h
-        util/testutil.cc
-        util/testutil.h
-        util/timer.h
-        AUTHORS
-        benchmark.cc
-        benchmark.md
-        collate.sh
-        configure.ac
-        design-sentinels.txt
-        leveldb-dump-all.cc
-        leveldb-verify.cc
-        libpebblesdb.pc.in
-        LICENSE
-        Makefile.am
-        NEWS
-        README
-        README.md
-        reliability.sh
-        TODO)
+        util/status.cc)
+
+include(TestBigEndian)
+test_big_endian(LEVELDB_IS_BIG_ENDIAN)
+
+# Check the existance of snappy
+if(HAVE_SNAPPY)
+    target_link_libraries(libpebblesdb snappy)
+endif(HAVE_SNAPPY)
+
+# Check pthread
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(libpebblesdb Threads::Threads)
+
+# Make 'testPebblesDB' executable
+add_executable(testPebblesDB
+        learning/testPebblesDB.cc)
+target_link_libraries(testPebblesDB
+        Threads::Threads
+        libpebblesdb)
