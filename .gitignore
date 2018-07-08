@@ -67,6 +67,7 @@
 /Makefile.old
 /missing
 /stamp-h1
+config.h*
 
 .idea/
 .vscode/
@@ -79,4 +80,3 @@ gdb.txt
 .settings/
 nbproject/
 CMakeFiles
-stamp-h1

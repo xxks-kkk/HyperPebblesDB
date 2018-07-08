@@ -58,7 +58,7 @@
 
 #ifdef HAVE_FFLUSH_UNLOCKED
 // do nothing
-#elif HAVE_FFLUSH
+#elif defined(HAVE_FFLUSH)
 #define fflush_unlocked fflush
 #else
 #error "no fflush found"
@@ -66,7 +66,7 @@
 
 #ifdef HAVE_FREAD_UNLOCKED
 // do nothing
-#elif HAVE_FREAD
+#elif defined(HAVE_FREAD)
 #define fread_unlocked fread
 #else
 #error "no fread found"
@@ -74,7 +74,7 @@
 
 #ifdef HAVE_FWRITE_UNLOCKED
 // do nothing
-#elif HAVE_FWRITE
+#elif defined(HAVE_FWRITE)
 #define fwrite_unlocked fwrite
 #else
 #error "no fwrite found"
@@ -82,7 +82,7 @@
 
 #if HAVE_DECL_FDATASYNC
 // do nothing
-#elif HAVE_FSYNC
+#elif defined(HAVE_FSYNC)
 #define fdatasync fsync
 #else
 #error "no fdatasync/fsync found"

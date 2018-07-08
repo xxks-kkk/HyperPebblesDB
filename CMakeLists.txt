@@ -47,6 +47,17 @@ check_include_file("machine/endian.h" HAVE_MACHINE_ENDIAN_H)
 check_include_file("sys/endian.h" HAVE_SYS_ENDIAN_H)
 check_include_file("sys/isa_defs.h" HAVE_SYS_ISA_DEFS_H)
 check_include_file("sys/types.h" HAVE_SYS_TYPES_H) #TODO: the variable name is not right in the port/port_posix.h
+check_include_file("dlfcn.h" HAVE_DLFCN_H)
+check_include_file("inttypes.h" HAVE_INTTYPES_H)
+check_include_file("memory.h" HAVE_MEMORY_H)
+check_include_file("stdint.h" HAVE_STDINT_H)
+check_include_file("stdlib.h" HAVE_STDLIB_H)
+check_include_file("strings.h" HAVE_STRINGS_H)
+check_include_file("string.h" HAVE_STRING_H)
+check_include_file("sys/param.h" HAVE_SYS_PARAM_H)
+check_include_file("sys/stat.h" HAVE_SYS_STAT_H)
+check_include_file("unistd.h" HAVE_UNISTD_H)
+
 
 include(CheckFunctionExists)
 
@@ -64,10 +75,10 @@ endmacro()
 check_function_exists_in_batch(
         error_at_line mmap alarm clock_gettime mach_absolute_time ftruncate fsync
         fread fread_unlocked fwrite fwrite_unlocked fflush
-        fflush_unlocked memmove mkdir munmap rmdir socket)
+        fflush_unlocked memmove mkdir munmap rmdir socket getpagesize)
 
 include(CheckSymbolExists)
-check_symbol_exists(fdatasync unistd.h HAVE_FDATASYNC)
+check_symbol_exists(fdatasync "unistd.h" HAVE_DECL_FDATASYNC)
 
 include(CheckLibraryExists)
 check_library_exists(crc32c crc32c_value "" HAVE_CRC32C)
