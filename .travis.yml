@@ -57,7 +57,7 @@ install:
 
 before_script:
 - cd ..
-- cmake . -DNDEBUG=1  # -DNDEBUG=1 needs (see issue #24)
+- cmake . -DCMAKE_CXX_COMPILER=${CXX} -DNDEBUG=1  # -DNDEBUG=1 needs (see issue #24)
 
 script:
 # `make all` still break
