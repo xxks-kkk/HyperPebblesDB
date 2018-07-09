@@ -209,6 +209,7 @@ if (PEBBLESDB_BUILD_TESTS)
     pebblesdb_test("${PROJECT_SOURCE_DIR}/db/write_batch_test.cc")
     pebblesdb_test("${PROJECT_SOURCE_DIR}/issues/issue178_test.cc")
     pebblesdb_test("${PROJECT_SOURCE_DIR}/issues/issue200_test.cc")
+    pebblesdb_test("${PROJECT_SOURCE_DIR}/util/env_posix_test.cc")
 endif (PEBBLESDB_BUILD_TESTS)
 
 get_cmake_property(_variableNames VARIABLES)
