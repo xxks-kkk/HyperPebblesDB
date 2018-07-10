@@ -19,14 +19,13 @@ good out of it (e.g. paper). Well, Prof. Michael Stonebraker's Postgres will be 
 environment: ["Way too much work for too few publications"](https://youtu.be/DJFKl_5JTnA). However, I think
 Postgres's success really lies in the tremendous effort done on the implementation side. Also, Prof. John Ousterhout views
 the discard of research prototype as a waste of effort (Check out [how much effort](https://ramcloud.atlassian.net/wiki/spaces/RAM/pages/19726351/Group+Photos)
-Prof. John Ousterhout and his group devote to build [RAMCloud](https://web.stanford.edu/~ouster/cgi-bin/papers/ramcloud.pdf).
-I simply agree with them.
+Prof. John Ousterhout and his group devote to build [RAMCloud](https://web.stanford.edu/~ouster/cgi-bin/papers/ramcloud.pdf)).
+I simply agree with their opinions.
 
 From practical point of view, this project serves me well for the following purpose:
 
 - Improve my competency to work with a relative complex project
 - A robust testbed for LevelDB-related research projects
-
 
 ### Installation
 
