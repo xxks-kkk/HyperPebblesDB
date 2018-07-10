@@ -1,5 +1,4 @@
-leveldb: A key-value store
-Authors: Sanjay Ghemawat (sanjay@google.com) and Jeff Dean (jeff@google.com)
+HyperPebblesdb: A key-value store
 
 The code under this directory implements a system for maintaining a
 persistent key/value store.
@@ -49,14 +48,3 @@ include/env.h
 include/table.h
 include/table_builder.h
     Lower-level modules that most clients probably won't use directly
-
-Install
-=======
-
-Get up and running quickly:
-
-    $ autoreconf -i
-    $ ./configure
-    $ make
-    # make install
-    # ldconfig
