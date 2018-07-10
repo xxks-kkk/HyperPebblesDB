@@ -67,6 +67,7 @@
 /Makefile.old
 /missing
 /stamp-h1
+config.h*
 
 .idea/
 .vscode/

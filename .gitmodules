@@ -4,3 +4,9 @@
 [submodule "third-party/YCSB"]
 	path = third-party/YCSB
 	url = https://github.com/JianweiCxyz/YCSB
+[submodule "src/third-party/SuRF"]
+	path = src/third-party/SuRF
+	url = https://github.com/sunwell1994/SuRF
+[submodule "src/third-party/YCSB"]
+	path = src/third-party/YCSB
+	url = https://github.com/JianweiCxyz/YCSB
