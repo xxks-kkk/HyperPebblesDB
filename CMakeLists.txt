@@ -212,6 +212,7 @@ if (PEBBLESDB_BUILD_TESTS)
     pebblesdb_test("${PROJECT_SOURCE_DIR}/util/env_posix_test.cc")
 endif (PEBBLESDB_BUILD_TESTS)
 
+# Print out all the CMake variables
 get_cmake_property(_variableNames VARIABLES)
 list (SORT _variableNames)
 foreach (_variableName ${_variableNames})
