@@ -15,25 +15,25 @@
 #cmakedefine HAVE_ENDIAN_H
 
 /* Define to 1 if you have the `fflush' function. */
-#cmakedefine HAVE_FFLUSH
+#cmakedefine01 HAVE_FFLUSH
 
 /* Define to 1 if you have the `fflush_unlocked' function. */
 #cmakedefine HAVE_FFLUSH_UNLOCKED
 
 /* Define to 1 if you have the `fread' function. */
-#cmakedefine HAVE_FREAD
+#cmakedefine01 HAVE_FREAD
 
 /* Define to 1 if you have the `fread_unlocked' function. */
 #cmakedefine HAVE_FREAD_UNLOCKED
 
 /* Define to 1 if you have the `fsync' function. */
-#cmakedefine HAVE_FSYNC
+#cmakedefine01 HAVE_FSYNC
 
 /* Define to 1 if you have the `ftruncate' function. */
 #cmakedefine HAVE_FTRUNCATE
 
 /* Define to 1 if you have the `fwrite' function. */
-#cmakedefine HAVE_FWRITE
+#cmakedefine01 HAVE_FWRITE
 
 /* Define to 1 if you have the `fwrite_unlocked' function. */
 #cmakedefine HAVE_FWRITE_UNLOCKED

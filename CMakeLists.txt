@@ -162,10 +162,6 @@ target_link_libraries(pebblesdb Threads::Threads)
 
 message(STATUS "C++ flags:    " ${CMAKE_CXX_FLAGS})
 
-if (PEBBLESDB_INSTALL)
-    message("Install HyperPebblesDB")
-endif (PEBBLESDB_INSTALL)
-
 if (PEBBLESDB_BUILD_TESTS)
     enable_testing()
 
@@ -243,7 +239,7 @@ if(PEBBLESDB_INSTALL)
             "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/write_batch.h"
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pebblesdb
     )
-endif(LEVELDB_INSTALL)
+endif(PEBBLESDB_INSTALL)
 
 # Print out all the CMake variables
 get_cmake_property(_variableNames VARIABLES)
