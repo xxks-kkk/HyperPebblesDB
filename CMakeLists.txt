@@ -21,9 +21,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-variadic-macros")
 message(STATUS "CMAKE_SOURCE_DIR:    " ${CMAKE_SOURCE_DIR})
 
 # /Users/zeyuan/Documents/projects/HyperPebblesDB-test/src/
-set(PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/")
+set(PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
 message(STATUS "PROJECT_SOURCE_DIR:  " ${PROJECT_SOURCE_DIR})
 
+# need to let "port_posix.h" to include "config.h"
 add_definitions(-DHAVE_CONFIG_H)
 
 include(CheckCXXCompilerFlag)
@@ -85,6 +86,8 @@ check_library_exists(crc32c crc32c_value "" HAVE_CRC32C)
 check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
 check_library_exists(tcmalloc malloc "" HAVE_TCMALLOC)
 
+set(PEBBLESDB_PUBLIC_INCLUDE_DIR "include/pebblesdb")
+
 configure_file(
         "${PROJECT_SOURCE_DIR}/config.h.in"
         "${PROJECT_SOURCE_DIR}/config.h"
@@ -139,7 +142,8 @@ target_sources(pebblesdb
         "${PROJECT_SOURCE_DIR}/util/logging.cc"
         "${PROJECT_SOURCE_DIR}/util/options.cc"
         "${PROJECT_SOURCE_DIR}/util/status.cc"
-        "${PROJECT_SOURCE_DIR}/port/port_posix.cc")
+        "${PROJECT_SOURCE_DIR}/port/port_posix.cc"
+        )
 
 target_compile_definitions(pebblesdb
         PRIVATE
@@ -210,7 +214,36 @@ if (PEBBLESDB_BUILD_TESTS)
     pebblesdb_test("${PROJECT_SOURCE_DIR}/issues/issue178_test.cc")
     pebblesdb_test("${PROJECT_SOURCE_DIR}/issues/issue200_test.cc")
     pebblesdb_test("${PROJECT_SOURCE_DIR}/util/env_posix_test.cc")
+    pebblesdb_test("${PROJECT_SOURCE_DIR}/demo/installation_test.cc")
 endif (PEBBLESDB_BUILD_TESTS)
+
+if(PEBBLESDB_INSTALL)
+    include(GNUInstallDirs)
+    install(TARGETS pebblesdb
+            EXPORT pebblesdbTargets
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            )
+    install(
+            FILES
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/c.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/cache.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/comparator.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/db.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/env.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/filter_policy.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/iterator.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/options.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/slice.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/replay_iterator.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/status.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/table_builder.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/table.h"
+            "${PROJECT_SOURCE_DIR}/${PEBBLESDB_PUBLIC_INCLUDE_DIR}/write_batch.h"
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pebblesdb
+    )
+endif(LEVELDB_INSTALL)
 
 # Print out all the CMake variables
 get_cmake_property(_variableNames VARIABLES)
